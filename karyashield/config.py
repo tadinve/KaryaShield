@@ -43,6 +43,7 @@ class Config:
     llm_api_key: str
     gcp_project: str
     gcp_location: str
+    gemini_api_key: str
     ch_host: str
     ch_port: int
     ch_user: str
@@ -64,6 +65,7 @@ class Config:
             "llm_provider": self.llm_provider,
             "llm_model": self.llm_model,
             "llm": (f"vertex project={self.gcp_project} location={self.gcp_location}" if self.llm_provider == "vertex"
+                    else f"gemini_api key={'set' if self.gemini_api_key else 'MISSING'}" if self.llm_provider == "gemini_api"
                     else f"base_url={self.llm_base_url} api_key={'set' if self.llm_api_key else 'MISSING'}"),
             "clickhouse_host": "set" if self.ch_host else "MISSING",
             "clickhouse_password": "set" if self.ch_password else "MISSING",
@@ -106,8 +108,10 @@ def load_config(env_file: Path | None = None) -> Config:
     # Writes are enabled ONLY by the exact string "true".
     enable_writes = os.getenv("KARYASHIELD_ENABLE_WRITES", "false").strip().lower() == "true"
     llm_provider = os.getenv("LLM_PROVIDER", "vertex").strip().lower()
-    if llm_provider not in ("vertex", "openai_compat"):
-        raise ConfigError("LLM_PROVIDER must be 'vertex' or 'openai_compat'")
+    if llm_provider not in ("vertex", "gemini_api", "openai_compat"):
+        raise ConfigError("LLM_PROVIDER must be 'vertex', 'gemini_api' or 'openai_compat'")
+    if llm_provider == "gemini_api" and not os.getenv("GEMINI_API_KEY", "").strip():
+        raise ConfigError("GEMINI_API_KEY is required for LLM_PROVIDER=gemini_api")
     if llm_provider == "vertex" and not os.getenv("GOOGLE_CLOUD_PROJECT", "").strip():
         raise ConfigError("GOOGLE_CLOUD_PROJECT is required for LLM_PROVIDER=vertex")
     ch_db = os.getenv("CLICKHOUSE_DATABASE", "karyashield").strip()
@@ -123,6 +127,7 @@ def load_config(env_file: Path | None = None) -> Config:
         llm_api_key=os.getenv("LLM_API_KEY", "").strip(),
         gcp_project=os.getenv("GOOGLE_CLOUD_PROJECT", "").strip(),
         gcp_location=os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1").strip(),
+        gemini_api_key=os.getenv("GEMINI_API_KEY", "").strip(),
         ch_host=os.getenv("CLICKHOUSE_HOST", "").strip(),
         ch_port=_int("CLICKHOUSE_PORT", 8443),
         ch_user=os.getenv("CLICKHOUSE_USER", "default").strip(),

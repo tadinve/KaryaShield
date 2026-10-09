@@ -77,7 +77,7 @@ class ClickHouseBackend:
         client = clickhouse_connect.get_client(
             host=host, port=port, username=user, password=password, secure=secure,
             ca_cert=certifi.where() if secure else None,  # python.org macOS builds ship no root CAs
-            connect_timeout=8, send_receive_timeout=30,
+            connect_timeout=10, send_receive_timeout=90,  # idle service wake-up can exceed 30s
             # Read-your-writes across ClickHouse Cloud replicas.
             settings={"select_sequential_consistency": 1},
         )

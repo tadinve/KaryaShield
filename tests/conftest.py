@@ -19,7 +19,7 @@ SHA = "a" * 40
 
 def make_cfg(**kw) -> Config:
     base = dict(
-        llm_provider="openai_compat", llm_model="m", llm_base_url="http://x", llm_api_key="x", gcp_project="", gcp_location="us-central1", ch_host="", ch_port=8443, ch_user="u", ch_password="", ch_database="t", ch_secure=True,
+        llm_provider="openai_compat", llm_model="m", llm_base_url="http://x", llm_api_key="x", gcp_project="", gcp_location="us-central1", gemini_api_key="", ch_host="", ch_port=8443, ch_user="u", ch_password="", ch_database="t", ch_secure=True,
         github_repo=REPO, github_branch="main", allowlist=(REPO,), enable_writes=True,
         min_severity="WARNING", workspace_dir=Path("/tmp/ks"), scan_timeout=90,
         llm_timeout=45, watch_interval=1,

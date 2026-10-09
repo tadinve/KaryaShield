@@ -58,7 +58,7 @@ def cmd_doctor(_args) -> int:
         good &= _ok("ClickHouse ping", False, _scrub(cfg, f"{type(e).__name__}: {str(e)[:150]}"))
     try:
         llm = make_client(cfg)
-        if llm.provider == "vertex":
+        if llm.provider in ("vertex", "gemini_api"):
             text = llm.client.models.generate_content(model=cfg.llm_model, contents="Reply with the single word OK.").text
         else:
             if not cfg.llm_api_key:
@@ -191,6 +191,7 @@ def cmd_worker(_args) -> int:
                     raise RuntimeError(rep.fatal)  # retry this SHA next cycle
                 last_sha = sha
             else:
+                _backend(cfg)  # keepalive ping: stops the ClickHouse service idling before the next commit
                 _log(f"[WORKER] cycle {cycle}: no new commit ({sha[:12]})")
             health.update(last_error_type=None)
             delay = cfg.watch_interval

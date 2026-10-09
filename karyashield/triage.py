@@ -2,6 +2,7 @@
 
 Providers (LLM_PROVIDER):
 - vertex:        Gemini on Google Vertex AI via google-genai (ADC / service account auth)
+- gemini_api:    Gemini Developer API via google-genai (GEMINI_API_KEY)
 - openai_compat: any OpenAI-compatible endpoint (LLM_BASE_URL + LLM_API_KEY)
 """
 from __future__ import annotations
@@ -31,7 +32,7 @@ _FENCE_RE = re.compile(r"^```(?:json)?\s*|\s*```$")
 
 @dataclass
 class LLMClient:
-    provider: str  # "vertex" | "openai_compat"
+    provider: str  # "vertex" | "gemini_api" | "openai_compat"
     client: Any
     label: str  # human-readable "provider/model" for logs and issue bodies
 
@@ -63,6 +64,14 @@ def make_client(cfg) -> LLMClient:
                          http_options=types.HttpOptions(timeout=cfg.llm_timeout * 1000,
                                                         retry_options=types.HttpRetryOptions(attempts=2)))
         return LLMClient("vertex", c, f"Gemini {cfg.llm_model} on Vertex AI")
+    if cfg.llm_provider == "gemini_api":
+        from google import genai
+        from google.genai import types
+
+        c = genai.Client(api_key=cfg.gemini_api_key,
+                         http_options=types.HttpOptions(timeout=cfg.llm_timeout * 1000,
+                                                        retry_options=types.HttpRetryOptions(attempts=2)))
+        return LLMClient("gemini_api", c, f"Gemini {cfg.llm_model} (Gemini API)")
     from openai import OpenAI
 
     c = OpenAI(api_key=cfg.llm_api_key, base_url=cfg.llm_base_url, timeout=cfg.llm_timeout, max_retries=1)
@@ -96,7 +105,8 @@ def _call_openai_compat(llm: LLMClient, model: str, f: Finding) -> str:
 
 def triage_finding(llm: LLMClient, model: str, f: Finding) -> TriageResult:
     try:
-        raw = _call_vertex(llm, model, f) if llm.provider == "vertex" else _call_openai_compat(llm, model, f)
+        raw = (_call_vertex(llm, model, f) if llm.provider in ("vertex", "gemini_api")
+               else _call_openai_compat(llm, model, f))
     except Exception as e:  # transport, auth, quota, safety block
         return TriageResult(ok=False, error=f"{type(e).__name__}: {str(e)[:300]}")
     try:

@@ -1,11 +1,11 @@
 # KaryaShield Status
-- Updated at: 2026-10-09 13:10 PDT
+- Updated at: 2026-10-09 13:36 PDT
 - Milestone completed: M0–M5 PASS (local, real services; MVP accepted). M6 PASS locally (container dry-run); image push pending builder OK.
 - Last actual command: `docker run … karyashield:local` (worker, dry-run) + in-container triage via entrypoint
 - Result: PASS. Container: fetch → scan → ClickHouse ledger → DUPLICATE issue #1; /healthz ok; /status JSON; Gemini triage in-container ok. Evidence: demo/evidence/m6_container.md
-- Real integrations verified live: Semgrep ✅ · ClickHouse ✅ (inserts + reads) · GitHub issue ✅ · LLM (Gemini/Vertex, non-sponsor) ✅ · Akash Network ❌ (not deployed)
+- Real integrations verified live: Semgrep ✅ · ClickHouse ✅ (inserts + reads) · GitHub issue ✅ · LLM: Gemini API gemini-3.8-flash ✅ (also Vertex 2.5 Flash ✅; non-sponsor) · Akash Console API key ✅ (read-only calls) · Akash deployment ❌ not yet
 - GitHub issue URL: https://github.com/tadinve/KaryaShield/issues/1
-- Remaining blocker: builder OK for (a) init-db migration (scan_runs.host), (b) pushing image to ghcr.io (public), (c) Akash deployment + credits; fine-grained GitHub PAT for the worker.
+- Remaining blocker: builder OK for init-db migration + image push (needs `gh auth refresh -s write:packages`), fine-grained GH token for worker, then deploy approval.
 - Next single action: builder approves image push + provides Akash credits/PAT → M7 deploy
 - Submission state: NOT SUBMITTED
 
@@ -27,3 +27,6 @@
 - ~13:00 Label `karyashield` created + init-db (builder OK). doctor: ALL PASS. Real e2e dry run: WOULD_CREATE, ClickHouse 0 rows. Fixed truncated code fence in issue body; issue heading names the model.
 - 13:05 M4 PASS: real issue https://github.com/tadinve/KaryaShield/issues/1 created; ClickHouse record links it. M5 PASS: rerun → duplicate, 0 issues. Write gate set back to false.
 - 13:10 M6 PASS (local): linux/amd64 image; worker dry-run in Docker saw issue #1 as duplicate via ClickHouse; /status works; in-container Vertex triage ok.
+- 13:27 Akash Console API key verified read-only (balance $26, 0 deployments); deploy script deploy/akash_deploy.py; SDL denom uact (from Console templates).
+- 13:33 Gemini API key: gemini-2.5-flash unavailable to new keys; gemini-3.8-flash real triage ok (6.1s). LLM_PROVIDER=gemini_api now default (local + Akash); Vertex creds no longer needed in the container.
+- 13:35 ClickHouse idle wake-up caused a 30s read timeout; worker now pings ClickHouse on quiet cycles; read timeout 90s. doctor ALL PASS.
