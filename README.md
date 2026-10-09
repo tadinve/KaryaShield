@@ -18,7 +18,7 @@ A KaryaShield worker runs on **Akash Network** and watches a GitHub repo. On eve
 3. asks an LLM to explain the finding and suggest a fix (advisory only)
 4. runs a **deterministic policy gate**: write switch, repo allowlist, SHA match, pinned rule, severity, valid triage, per-run cap
 5. checks **ClickHouse** and GitHub, so the same flaw is never filed twice
-6. **proposes a fix and verifies it in a sandbox** (CodeMender-style): the patched file must parse, a Semgrep re-scan must show the finding gone, no new findings may appear, and nothing is ever executed
+6. **proposes a fix and verifies it** (CodeMender-style). The patched file must parse, a Semgrep re-scan must show the finding gone, and no new findings may appear. Then a **sandboxed differential exploit test** must reproduce the exploit on the original and see it blocked on the patch. Only then does it open a **draft PR for human review**
 7. files a **real GitHub issue** with evidence, a permalink, the AI assessment, the verified patch (suggested, never applied) and a hidden fingerprint marker
 8. records the incident, an audit event and run analytics in **ClickHouse**
 
@@ -149,15 +149,15 @@ Tests: `.venv/bin/python -m pytest -q` → **67 passed**. They cover path traver
 - **Coverage:** exactly two pinned Semgrep rules (CWE-78 `subprocess(..., shell=True)` and CWE-95 `eval` on non-literals). This is not a general scanner.
 - **Single writer:** duplicate prevention assumes one worker replica, because ClickHouse has no compare-and-set. The GitHub marker check is the backstop.
 - **Fingerprints:** renaming a file or editing the flagged line produces a new fingerprint.
-- **Patch verification is static:** the patched file must parse and Semgrep must stop reporting the finding. The repo's tests are not run, because KaryaShield never executes repo code. A verified patch is a suggestion for human review, never applied automatically.
+- **Patch verification is narrow.** It runs static checks (the file parses, the Semgrep finding is gone, no new findings) plus a rule-specific *differential exploit test*. That test runs in a sandboxed `python -I` process with no secrets, a Python audit hook that blocks network, process spawning and out-of-sandbox writes, and resource limits. It is defense in depth, not a VM. The repo's own test suite is not run.
 - **Demo target:** the target repo is this repo, and its seeded flaws (`demo/target_seed/`) are intentionally vulnerable fixtures that are never executed.
-- Not production-ready: no autonomous patching, no PRs, no multi-tenant support.
+- Not production-ready. Fixes arrive only as **draft PRs on a separate branch**; KaryaShield never pushes to `main`, never merges and never approves. `main` is branch-protected and needs 1 human review. No multi-tenant support.
 
 ## Future work
 
 - Ground the triage in verified remediation guidance (Senso.ai), with citations in the issue.
 - Serve the LLM on an Akash GPU lease, so Akash covers inference as well as hosting.
-- Open draft PRs from verified patches, with human approval only.
+- Run the repo's own tests in a VM-grade sandbox (for example gVisor or Firecracker) before opening a PR.
 - More rules, and more repos per worker.
 
 ## Built during the hackathon
