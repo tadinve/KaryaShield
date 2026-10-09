@@ -1,10 +1,10 @@
 """CodeMender-style remediation: the LLM proposes a fix; a sandbox verifies it.
 
 Safety invariants:
-- Never executes repository code or model output. Verification is static only:
-  `ast.parse` (parse, not run) and a Semgrep re-scan of an isolated temp copy.
-- Never writes to the repository, never commits, pushes or opens PRs. A verified patch is
-  only *shown* (CLI output / issue body) as a suggestion for human review.
+- Static checks first (`ast.parse`, Semgrep re-scan of an isolated temp copy). Code is executed ONLY in
+  `sandbox.py`'s locked-down differential exploit test (no secrets, no network, no process spawning).
+- Never writes to the default branch. A verified patch is shown in the issue and, when enabled, offered
+  as a DRAFT pull request on a separate branch for human review (pr.py); nothing is ever merged.
 - The model output is untrusted: a patch is reported as verified only if every check passes.
 """
 from __future__ import annotations
@@ -18,6 +18,7 @@ from typing import Callable, Literal
 from pydantic import BaseModel
 
 from .models import Finding
+from .sandbox import differential_test
 from .scanner import safe_relative_path
 from .triage import LLMClient, generate_json, parse_json
 
@@ -44,6 +45,7 @@ class PatchResult(BaseModel):
     checks: list[str] = []
     diff: str = ""
     explanation: str = ""
+    fixed: str = ""  # full patched file (for the human-review PR); never written to the repo checkout
 
 
 ScanFn = Callable[[Path], list[Finding]]
@@ -93,7 +95,11 @@ def verify_patch(f: Finding, original: str, fixed: str, explanation: str, scan_f
         return PatchResult(status="rejected", reason=f"patch introduces new finding(s): {new[0].rule_id}",
                            checks=checks, diff=diff)
     checks.append("no new findings introduced")
-    return PatchResult(status="verified", checks=checks, diff=diff, explanation=explanation.strip()[:400])
+    t = differential_test(f.rule_id, f.path, original, fixed)
+    if not t.passed:
+        return PatchResult(status="rejected", reason=f"sandbox exploit test failed: {t.summary}", checks=checks, diff=diff)
+    checks.append(f"sandbox exploit test: {t.summary} (original: {t.original.detail}; patched: {t.patched.detail})")
+    return PatchResult(status="verified", checks=checks, diff=diff, explanation=explanation.strip()[:400], fixed=fixed)
 
 
 def propose_and_verify(llm: LLMClient, model: str, checkout: Path, f: Finding, scan_fn: ScanFn) -> PatchResult:

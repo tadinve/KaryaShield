@@ -80,3 +80,11 @@ def test_propose_and_verify_end_to_end_with_fake_llm(checkout, finding):
 
 def test_garbage_proposal_is_error(checkout, finding):
     assert propose_and_verify(_llm("not json"), "m", checkout, finding, scan_fn).status == "error"
+
+
+def test_sandbox_rejects_patch_that_is_still_exploitable(finding):
+    # passes Semgrep (no literal shell=True) but still builds a shell string: the exploit test must catch it
+    sneaky = ORIGINAL.replace('subprocess.run(f"ping -c 1 {host}", shell=True, capture_output=True)',
+                              'subprocess.run(f"ping -c 1 {host}", capture_output=True, **{"shell": True})')
+    r = verify_patch(finding, ORIGINAL, sneaky, "", scan_fn)
+    assert r.status == "rejected" and "sandbox exploit test failed" in r.reason

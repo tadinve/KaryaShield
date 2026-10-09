@@ -29,6 +29,7 @@ class Deps:
     build_issue: Callable = gh.build_issue
     llm_label: str = "LLM"
     mend: Callable | None = None  # (finding, checkout_path) -> PatchResult; None = disabled
+    open_pr: Callable | None = None  # (finding, patch, issue_url) -> pr_url; None = disabled
 
 
 @dataclass
@@ -139,7 +140,16 @@ def process_finding(cfg: Config, f: Finding, ledger: Ledger, deps: Deps, run_id:
         ledger.set_status(f.fingerprint, "error", "create_failed", str(e), expect_run=run_id)
         return FindingOutcome(**base, action="error", detail=str(e))
     ledger.set_status(f.fingerprint, "issue_created", "issue_created", url, url=url, expect_run=run_id)
-    return FindingOutcome(**base, action="issue_created", issue_url=url)
+    detail = ""
+    if deps.open_pr and patch is not None and patch.status == "verified":
+        try:
+            pr_url = deps.open_pr(f, patch, url)
+            ledger.event(f.fingerprint, "pr_opened_draft", pr_url, run_id)
+            detail = f"draft PR for human review: {pr_url}"
+        except Exception as e:  # PR failure never undoes the issue
+            ledger.event(f.fingerprint, "pr_failed", f"{type(e).__name__}: {str(e)[:200]}", run_id)
+            detail = f"PR not opened: {type(e).__name__}"
+    return FindingOutcome(**base, action="issue_created", issue_url=url, detail=detail)
 
 
 def run_once(cfg: Config, ledger: Ledger, deps: Deps, *, dry_run: bool, log=print) -> RunReport:

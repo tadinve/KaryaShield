@@ -134,7 +134,7 @@ def _patch_section(patch) -> str:
         return f"## Proposed patch\n\nNo verified patch ({patch.status}: {patch.reason}).\n\n"
     checks = "\n".join(f"- {c}" for c in patch.checks)
     return (f"## Proposed patch (AI-generated, sandbox-verified, NOT applied)\n\n{patch.explanation}\n\n"
-            f"Verification (static only; no code was executed):\n{checks}\n\n"
+            f"Verification (static checks + sandboxed differential exploit test; nothing runs outside the sandbox):\n{checks}\n\n"
             f"`````diff\n{patch.diff}`````\n\n_Apply only after human review._\n\n")
 
 

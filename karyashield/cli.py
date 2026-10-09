@@ -17,6 +17,7 @@ from .config import PROJECT_ROOT, RULES_FILE, ConfigError, load_config
 from .scanner import scan, semgrep_bin
 from .store import ClickHouseBackend, Ledger
 from .mender import propose_and_verify
+from .pr import open_review_pr
 from .triage import make_client, triage_finding
 from .workflow import Deps, RunReport, run_once
 
@@ -92,6 +93,7 @@ def _deps(cfg) -> Deps:
         llm_label=llm.label,
         mend=(lambda f, path: propose_and_verify(llm, cfg.llm_model, path, f, _sandbox_scan_fn(cfg, f)))
         if cfg.propose_patch else None,
+        open_pr=open_review_pr if (cfg.open_pr and cfg.propose_patch) else None,
     )
 
 
@@ -233,6 +235,35 @@ def cmd_worker(_args) -> int:
         time.sleep(delay)
 
 
+def cmd_pr(_args) -> int:
+    """For findings already filed as issues: mend + sandbox-test, then open a DRAFT review PR.
+    Requires KARYASHIELD_ENABLE_WRITES=true and KARYASHIELD_OPEN_PR=true. Never merges."""
+    cfg = load_config()
+    if not (cfg.enable_writes and cfg.open_pr):
+        print("refusing: set KARYASHIELD_ENABLE_WRITES=true and KARYASHIELD_OPEN_PR=true for this command")
+        return 1
+    ledger = Ledger(_backend(cfg))
+    co = gh.fetch_checkout(cfg.github_repo, cfg.github_branch, cfg.workspace_dir)
+    findings, _ = scan(co.path, cfg.github_repo, co.sha, cfg.scan_timeout)
+    llm, rc = make_client(cfg), 0
+    for f in findings:
+        doc = ledger.get(f.fingerprint)
+        if not doc or doc.get("status") != "issue_created":
+            print(f"[PR] skip {f.path}:{f.start_line}: no filed issue")
+            continue
+        p = propose_and_verify(llm, cfg.llm_model, co.path, f, _sandbox_scan_fn(cfg, f))
+        print(f"[PR] {f.rule_id} {f.path}:{f.start_line} patch {p.status.upper()} {p.reason}")
+        for c in p.checks:
+            print(f"  ✓ {c}")
+        if p.status != "verified":
+            rc = 1
+            continue
+        url = open_review_pr(f, p, doc["github_issue_url"])
+        ledger.event(f.fingerprint, "pr_opened_draft", url, "cli-pr")
+        print(f"[PR] DRAFT PR for human review: {url}")
+    return rc
+
+
 def cmd_status(args) -> int:
     cfg = load_config()
     ledger = Ledger(_backend(cfg))
@@ -263,6 +294,7 @@ def main(argv=None) -> int:
     sub.add_parser("init-db")
     sub.add_parser("worker")
     sub.add_parser("mend")
+    sub.add_parser("pr")
     s = sub.add_parser("status")
     s.add_argument("-n", type=int, default=10)
     args = ap.parse_args(argv)
@@ -270,7 +302,7 @@ def main(argv=None) -> int:
         print("gh CLI not found")
         return 1
     try:
-        return {"doctor": cmd_doctor, "run": cmd_run, "watch": cmd_watch, "status": cmd_status, "init-db": cmd_init_db, "worker": cmd_worker, "mend": cmd_mend}[args.cmd](args)
+        return {"doctor": cmd_doctor, "run": cmd_run, "watch": cmd_watch, "status": cmd_status, "init-db": cmd_init_db, "worker": cmd_worker, "mend": cmd_mend, "pr": cmd_pr}[args.cmd](args)
     except ConfigError as e:
         print(f"config error: {e}")
         return 1

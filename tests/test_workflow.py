@@ -107,3 +107,32 @@ def test_truncated_code_fence_is_closed_before_marker():
     _, body = gh.build_issue(f, t, "Gemini x on Vertex AI")
     before_marker = body.split(gh.marker(f.fingerprint))[0]
     assert before_marker.count("```") % 2 == 0 and "Gemini x on Vertex AI" in body
+
+
+def test_verified_patch_opens_draft_pr_after_issue_and_pr_failure_keeps_issue(ledger, fake_gh):
+    from karyashield.mender import PatchResult
+    f = make_finding()
+    deps = make_deps(fake_gh, [f])
+    opened = []
+    deps.mend = lambda finding, path: PatchResult(status="verified", checks=["ok"], diff="d", fixed="x\n")
+    deps.open_pr = lambda finding, patch, issue_url: opened.append(issue_url) or "https://github.com/o/r/pull/7"
+    rep = run_once(make_cfg(), ledger, deps, dry_run=False, log=lambda *_: None)
+    assert rep.issues_created == 1 and opened == [fake_gh.created[0][1]] and "pull/7" in rep.outcomes[0].detail
+    f2 = make_finding(path="app/other.py")
+    deps2 = make_deps(fake_gh, [f2])
+    deps2.mend = deps.mend
+    def boom(*a):
+        raise RuntimeError("no permission")
+    deps2.open_pr = boom
+    rep2 = run_once(make_cfg(), ledger, deps2, dry_run=False, log=lambda *_: None)
+    assert rep2.issues_created == 1 and "PR not opened" in rep2.outcomes[0].detail
+
+
+def test_unverified_patch_never_opens_pr(ledger, fake_gh):
+    from karyashield.mender import PatchResult
+    deps = make_deps(fake_gh, [make_finding()])
+    deps.mend = lambda finding, path: PatchResult(status="rejected", reason="still vulnerable")
+    called = []
+    deps.open_pr = lambda *a: called.append(1) or "x"
+    run_once(make_cfg(), ledger, deps, dry_run=False, log=lambda *_: None)
+    assert called == []
