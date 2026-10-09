@@ -50,3 +50,10 @@ Commit `3517894` pushed at 13:54:50 PDT; the Akash worker scanned it ~25s later 
 - Old deployment 1791578920187 closed FIRST (single writer), then image `eef7d17` (digest sha256:3f266cfd1489…) deployed: dseq **1791582426373**, 8 bids, provider akash1aaul837r7…, ready at 14:47:57.
 - Live status page: http://jp4ikhmqk9alt94bi0g5c68d80.ingress.h6i-dedicated.eu-se-1.digitalfrontier.so/status
 - First cycle: write mode, sha eef7d17, findings=1, duplicates_skipped=1, issues_created=0, 9.1s; ClickHouse scan_runs host='akash'.
+
+## Redeploy for option C (15:11–15:12 PDT, builder-authorized)
+
+- main branch protected (1 approving review, no force-push/deletion; admin bypass only).
+- CWE migration run by the builder in the ClickHouse SQL console ("ALTER succeeded"); worker also runs idempotent migrate-on-start.
+- Closed 1791582426373 FIRST, deployed image c37d7a7 (CWE classification, sandbox exploit test, draft human-review PRs on): dseq **1791583925308**, 7 bids, ready 15:12:24.
+- Status: http://i1cbkmcl41c2957r09nvn4st0c.ingress.h6i-dedicated.eu-se-1.digitalfrontier.so/status → host=akash, write mode, findings=1, duplicates_skipped=1, errors=0, 8.9s.

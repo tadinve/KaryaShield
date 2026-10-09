@@ -24,7 +24,7 @@ A KaryaShield worker runs on **Akash Network** and watches a GitHub repo. On eve
 
 Live proof:
 - Issue filed autonomously: **[tadinve/KaryaShield#1](https://github.com/tadinve/KaryaShield/issues/1)**
-- The worker runs on Akash (deployment `dseq 1791582426373`), with a live status page at [http://jp4ikhmqk9alt94bi0g5c68d80.ingress.h6i-dedicated.eu-se-1.digitalfrontier.so/status](http://jp4ikhmqk9alt94bi0g5c68d80.ingress.h6i-dedicated.eu-se-1.digitalfrontier.so/status). It scanned a new commit about 25 seconds after the push ([evidence](demo/evidence/m7_akash.md)).
+- The worker runs on Akash (deployment `dseq 1791583925308`), with a live status page at [http://i1cbkmcl41c2957r09nvn4st0c.ingress.h6i-dedicated.eu-se-1.digitalfrontier.so/status](http://i1cbkmcl41c2957r09nvn4st0c.ingress.h6i-dedicated.eu-se-1.digitalfrontier.so/status). It scanned a new commit about 25 seconds after the push ([evidence](demo/evidence/m7_akash.md)).
 - The patch is proposed by the model and verified statically in a sandbox ([evidence](demo/evidence/mender.md)): flaw #1 `shell=True` → argument list, flaw #2 `eval` → `ast.literal_eval`.
 
 ## Sponsor tools

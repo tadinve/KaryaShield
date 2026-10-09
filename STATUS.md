@@ -1,12 +1,12 @@
 # KaryaShield Status
-- Updated at: 2026-10-09 14:49 PDT
-- Milestone completed: M0–M7 + sandbox-verified remediation (mender). Worker LIVE on Akash dseq 1791582426373 (image eef7d17).
+- Updated at: 2026-10-09 15:13 PDT
+- Milestone completed: M0–M7 + CWE classification + sandbox-verified patch + draft human-review PRs (option C). Worker LIVE on Akash dseq 1791583925308 (image c37d7a7).
 - Last actual command: `python deploy/akash_deploy.py deploy deploy/akash.sdl.local.yaml --hours 8`
 - Result: PASS. 9 bids, lease active, service ready=1; Akash worker run 61b129c48df6: duplicate, 0 new issues. Evidence: demo/evidence/m7_akash.md. Open issue: provider ingress returns nginx 404 for /status.
 - Real integrations verified live: Semgrep ✅ · ClickHouse ✅ · Akash Network ✅ (worker running; scan_runs host='akash') · GitHub issue ✅ · LLM Gemini 3.6 Flash ✅ (non-sponsor)
 - GitHub issue URL: https://github.com/tadinve/KaryaShield/issues/1
-- Remaining blocker: none. Local runs must stay dry-run while the Akash worker is live.
-- Next single action: rehearse (dry), record fallback video; live demo pushes flaw #2
+- Remaining blocker: none for the demo. Laptop cannot reach ClickHouse :8443 from this network (Akash can); draft PR for issue #1 not opened for that reason.
+- Next single action: builder pushes flaw #2 live → expect issue #2 (CWE-95, verified patch) + draft PR within ~60s
 - Submission state: NOT SUBMITTED
 
 ## Log
@@ -38,3 +38,4 @@
 - 14:48 Redeploy (builder OK): closed 1791578920187, deployed eef7d17 → dseq 1791582426373; /status reachable at http://jp4ikhmqk9alt94bi0g5c68d80.ingress.h6i-dedicated.eu-se-1.digitalfrontier.so/status; first cycle deduped issue #1. Flaw #2 mender rehearsal (local temp copy): VERIFIED (eval→ast.literal_eval).
 - 14:55 Sandbox differential exploit test (karyashield/sandbox.py: no-secret env, audit hook blocks network/spawn/writes, rlimits, timeout) — flaw #1 and #2 patches PASS (exploit reproduced on original, blocked on patched); cosmetic + sneaky patches rejected. Draft human-review PR (karyashield/pr.py; branch karyashield/fix-*, never main, never merged) behind KARYASHIELD_OPEN_PR. 61 tests.
 - 15:05 CWE/CVE classification per the builder's integration brief: data/cwe_top25_2025.json, explicit rule→CWE map (CWE-78 Top25 #9; CWE-95 child of CWE-94 #10, not forced into Top 25), unknown IDs rejected, Finding.cwe_id/cwe_source_url, issue shows CWE + 'CVE not applicable' + DETECTED/CLASSIFIED/TRIAGED/VERIFIED/REMEDIATED; incidents.cwe_* columns pending init-db migration. 67 tests.
+- 15:12 Option C: main protected; CWE migration (console); redeploy c37d7a7 → dseq 1791583925308, http://i1cbkmcl41c2957r09nvn4st0c.ingress.h6i-dedicated.eu-se-1.digitalfrontier.so/status healthy, dedup ok.
