@@ -37,3 +37,10 @@ ClickHouse `scan_runs` row written by the Akash worker (host='akash', write mode
 ```
 
 Known issue: the provider ingress (froggy-servers.com) returns its default nginx 404 for our hostname, so the /status page is not reachable yet; the worker itself is running (ClickHouse evidence).
+
+## Autonomous reaction to a new commit
+
+Commit `3517894` pushed at 13:54:50 PDT; the Akash worker scanned it ~25s later with no human action:
+```
+(2026-10-09 20:55:16 UTC, host=akash, run da5523e88295, sha 35178941fa3f, findings=1, issues_created=0, duplicates_skipped=1, errors=0, 6.7s)
+```

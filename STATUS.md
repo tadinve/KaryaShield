@@ -33,3 +33,4 @@
 - 13:38 Switched to gemini-3.6-flash (builder: 3.8 intermittently 429s). Real triage 2/2 ok (13.8s, 11.8s).
 - 13:40 init-db migration (builder OK): scan_runs.host added; existing 2 rows backfilled as 'local'.
 - 13:48 Image pushed (public). Deploy script TLS (certifi) + User-Agent fixes (Cloudflare 1010 blocked urllib default UA). Akash deployment dseq 1791578920187 active; 20:49:25Z scan_runs host='akash' (duplicate, 0 issues).
+- 13:55 Akash worker autonomously processed new commit 3517894 ~25s after push (scan_runs host=akash, duplicate, 0 issues).
