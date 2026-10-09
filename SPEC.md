@@ -242,6 +242,8 @@ gh label create karyashield --repo tadinve/KaryaShield --color B60205 --descript
 - Per-file parse or timeout errors become warnings. Everything else is fatal.
 
 ### 6.3 Triage (configurable LLM provider)
+- `LLM_PROVIDER=vertex` (current): Gemini (`LLM_MODEL=gemini-2.5-flash`) on Vertex AI via `google-genai` with `GOOGLE_CLOUD_PROJECT`/`GOOGLE_CLOUD_LOCATION`, `response_schema=Triage`. Auth: ADC locally; in the container a dedicated service account with only `roles/aiplatform.user`, key passed as `GOOGLE_APPLICATION_CREDENTIALS_JSON` and written to a 0600 temp file at start (provider-visible: delete the key after the event). If service-account keys are blocked, the container uses `LLM_PROVIDER=openai_compat` instead.
+- `LLM_PROVIDER=openai_compat`: the client below.
 - OpenAI SDK client with `base_url=LLM_BASE_URL`, `api_key=LLM_API_KEY`, timeout `LLM_TIMEOUT_SECONDS`, `max_retries=1`.
 - Call `chat.completions.create(model=LLM_MODEL, temperature=0, max_completion_tokens=1500, response_format=json_schema(Triage))`.
 - On `BadRequestError`, retry with `{"type":"json_object"}`. Always strip code fences, validate with Pydantic, then truncate and clamp.
@@ -365,7 +367,7 @@ Each run prints `run_id, mode, host, repo, sha, findings, actionable, issues_cre
 |---|---|---|---|
 | ASAP | M0 environment | `doctor` all PASS (ClickHouse, LLM, label) | partial; LLM key + real ClickHouse service pending |
 | 1:30 PM | M1 scanner | Real Semgrep finding from live checkout | **PASS 11:44** ([evidence](demo/evidence/m1_scan.md)) |
-| 1:30 PM | M2 triage | Real LLM response parses as Triage for the real finding | pending key |
+| 1:30 PM | M2 triage | Real LLM response parses as Triage for the real finding | **PASS 12:38** ([evidence](demo/evidence/m2_triage.md)) |
 | 2:15 PM | M3 ledger | Real ClickHouse inserts and reads; reconciliation verified | pending ClickHouse service |
 | 2:30 PM | M4 web action (local) | Real GitHub issue; ClickHouse links to it | |
 | 2:30 PM | M5 repeatability (local) | Rerun: duplicate, zero new issues | |

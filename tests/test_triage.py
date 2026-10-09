@@ -1,7 +1,7 @@
 """Model reliability (acceptance test 3): bad model output becomes a logged non-action."""
 from types import SimpleNamespace
 
-from karyashield.triage import triage_finding
+from karyashield.triage import LLMClient, triage_finding
 from tests.conftest import make_finding
 
 
@@ -10,7 +10,7 @@ def client(content=None, exc=None):
         if exc:
             raise exc
         return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=content))])
-    return SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+    return LLMClient("openai_compat", SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create))), "fake")
 
 
 GOOD_JSON = ('{"is_actionable": true, "risk_level": "high", "summary": "' + "s" * 500 +

@@ -148,7 +148,7 @@ def build_issue(f: Finding, t: Triage) -> tuple[str, str]:
 {f.snippet}
 {fence}
 
-## AI assessment (AkashML on Akash Network, advisory — not verified by a human)
+## AI assessment (LLM, advisory — not verified by a human)
 
 - **Risk level:** {t.risk_level}
 - **Summary:** {t.summary}

@@ -1,12 +1,12 @@
 # KaryaShield Status
-- Updated at: 2026-10-09 12:36 PDT
-- Milestone completed: M1 PASS (live fetch + real Semgrep). M0 partial: AkashML, ClickHouse and the issue label aren't verified yet.
-- Last actual command: live `fetch_checkout` + `scan` against tadinve/KaryaShield@be44ef5
-- Result: PASS, 1 real finding (subprocess-shell-true, demo/target_seed/app/ping_tool.py:8), checkout SHA == live SHA. Evidence: demo/evidence/m1_scan.md
-- Real sponsor integrations working: Semgrep (REAL, live repo) / Akash Network (worker hosting) NOT YET DEPLOYED / LLM provider NOT YET CHOSEN / ClickHouse NOT YET VERIFIED
+- Updated at: 2026-10-09 12:40 PDT
+- Milestone completed: M1 PASS (11:44), M2 PASS (12:38, Gemini on Vertex AI). M0 partial: ClickHouse service + label pending.
+- Last actual command: live fetch + Semgrep + `triage_finding` (Vertex Gemini) on tadinve/KaryaShield@0466b57
+- Result: PASS. Schema-valid triage (risk=high, actionable, confidence 0.9) in 8.9s. Evidence: demo/evidence/m2_triage.md
+- Real integrations verified live: Semgrep ✅ · LLM (Gemini/Vertex, non-sponsor) ✅ · ClickHouse ❌ (have Postgres host, need ClickHouse service) · Akash Network ❌ (not deployed)
 - GitHub issue URL: NOT YET
-- Remaining blocker: (1) `.env` with AKASHML_API_KEY + CLICKHOUSE_HOST/PASSWORD; (2) `karyashield` label on tadinve/KaryaShield; (3) `init-db` for ClickHouse schema
-- Next single action: builder fills `.env`, creates label, runs init-db; then run `doctor`
+- Remaining blocker: (1) real ClickHouse service host/password in .env; (2) `karyashield` label; (3) Akash credits. Risk: GCP project is a Qwiklabs lab (may expire; service-account keys for the container may be blocked)
+- Next single action: builder creates a ClickHouse (not Postgres) service and updates .env; then init-db
 - Submission state: NOT SUBMITTED
 
 ## Log
@@ -22,3 +22,4 @@
 - 11:44 M1 PASS: live GitHub fetch (SHA verified) + real Semgrep scan → 1 finding. Evidence demo/evidence/m1_scan.md. Still blocked on .env keys (all 3 empty at 11:43).
 - 12:20 ClickHouse creds received but host is *.pg.clickhouse.cloud (managed Postgres; only :5432 open, :8443/:9440 closed). ClickHouse NOT verified.
 - 12:35 Spec rev 5: Akash Network hosts the worker (Docker + SDL); triage via configurable OpenAI-compatible LLM (non-sponsor); milestones M6 container, M7 Akash.
+- 12:38 M2 PASS: real Gemini 2.5 Flash (Vertex AI, project qwiklabs-gcp-02-…) triage of the real finding; evidence demo/evidence/m2_triage.md. LLM_PROVIDER=vertex|openai_compat added.

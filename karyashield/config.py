@@ -37,8 +37,12 @@ def validate_repo(value: str) -> str:
 
 @dataclass(frozen=True)
 class Config:
-    akash_api_key: str
-    akash_model: str
+    llm_provider: str
+    llm_model: str
+    llm_base_url: str
+    llm_api_key: str
+    gcp_project: str
+    gcp_location: str
     ch_host: str
     ch_port: int
     ch_user: str
@@ -57,8 +61,10 @@ class Config:
 
     def redacted(self) -> dict:
         return {
-            "akash_model": self.akash_model,
-            "akashml_api_key": "set" if self.akash_api_key else "MISSING",
+            "llm_provider": self.llm_provider,
+            "llm_model": self.llm_model,
+            "llm": (f"vertex project={self.gcp_project} location={self.gcp_location}" if self.llm_provider == "vertex"
+                    else f"base_url={self.llm_base_url} api_key={'set' if self.llm_api_key else 'MISSING'}"),
             "clickhouse_host": "set" if self.ch_host else "MISSING",
             "clickhouse_password": "set" if self.ch_password else "MISSING",
             "clickhouse_database": self.ch_database,
@@ -99,6 +105,11 @@ def load_config(env_file: Path | None = None) -> Config:
         raise ConfigError("KARYASHIELD_MIN_SEVERITY must be INFO, WARNING or ERROR")
     # Writes are enabled ONLY by the exact string "true".
     enable_writes = os.getenv("KARYASHIELD_ENABLE_WRITES", "false").strip().lower() == "true"
+    llm_provider = os.getenv("LLM_PROVIDER", "vertex").strip().lower()
+    if llm_provider not in ("vertex", "openai_compat"):
+        raise ConfigError("LLM_PROVIDER must be 'vertex' or 'openai_compat'")
+    if llm_provider == "vertex" and not os.getenv("GOOGLE_CLOUD_PROJECT", "").strip():
+        raise ConfigError("GOOGLE_CLOUD_PROJECT is required for LLM_PROVIDER=vertex")
     ch_db = os.getenv("CLICKHOUSE_DATABASE", "karyashield").strip()
     if not re.match(r"^[A-Za-z_][A-Za-z0-9_]{0,62}$", ch_db):
         raise ConfigError("CLICKHOUSE_DATABASE must be a plain identifier")
@@ -106,8 +117,12 @@ def load_config(env_file: Path | None = None) -> Config:
     if not ws.is_absolute():
         ws = PROJECT_ROOT / ws
     return Config(
-        akash_api_key=os.getenv("AKASHML_API_KEY", "").strip(),
-        akash_model=os.getenv("AKASHML_MODEL", "meta-llama/Llama-3.3-70B-Instruct").strip(),
+        llm_provider=llm_provider,
+        llm_model=os.getenv("LLM_MODEL", "gemini-2.5-flash").strip(),
+        llm_base_url=os.getenv("LLM_BASE_URL", "https://api.openai.com/v1").strip(),
+        llm_api_key=os.getenv("LLM_API_KEY", "").strip(),
+        gcp_project=os.getenv("GOOGLE_CLOUD_PROJECT", "").strip(),
+        gcp_location=os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1").strip(),
         ch_host=os.getenv("CLICKHOUSE_HOST", "").strip(),
         ch_port=_int("CLICKHOUSE_PORT", 8443),
         ch_user=os.getenv("CLICKHOUSE_USER", "default").strip(),

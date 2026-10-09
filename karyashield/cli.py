@@ -52,17 +52,17 @@ def cmd_doctor(_args) -> int:
     except Exception as e:
         good &= _ok("ClickHouse ping", False, _scrub(cfg, f"{type(e).__name__}: {str(e)[:150]}"))
     try:
-        if not cfg.akash_api_key:
-            raise ValueError("AKASHML_API_KEY not set")
-        client = make_client(cfg.akash_api_key, cfg.llm_timeout)
-        ids = [m.id for m in client.models.list().data]
-        if cfg.akash_model not in ids:
-            raise ValueError(f"model {cfg.akash_model!r} not available; have: {ids[:8]}")
-        r = client.chat.completions.create(model=cfg.akash_model, max_completion_tokens=16,
-                                           messages=[{"role": "user", "content": "Reply with the single word OK."}])
-        good &= _ok("AkashML model access", bool(r.choices[0].message.content), f"model={cfg.akash_model}")
+        llm = make_client(cfg)
+        if llm.provider == "vertex":
+            text = llm.client.models.generate_content(model=cfg.llm_model, contents="Reply with the single word OK.").text
+        else:
+            if not cfg.llm_api_key:
+                raise ValueError("LLM_API_KEY not set")
+            text = llm.client.chat.completions.create(model=cfg.llm_model, max_completion_tokens=16, messages=[
+                {"role": "user", "content": "Reply with the single word OK."}]).choices[0].message.content
+        good &= _ok("LLM model access", bool(text), llm.label)
     except Exception as e:
-        good &= _ok("AkashML model access", False, f"{type(e).__name__}: {str(e)[:200]}")
+        good &= _ok("LLM model access", False, f"{type(e).__name__}: {str(e)[:200]}")
     print("doctor:", "ALL PASS" if good else "FAILURES PRESENT")
     return 0 if good else 1
 
@@ -79,10 +79,10 @@ def _backend(cfg) -> ClickHouseBackend:
 
 
 def _deps(cfg) -> Deps:
-    client = make_client(cfg.akash_api_key, cfg.llm_timeout)
+    llm = make_client(cfg)
     return Deps(
         scan=lambda path, repo, sha: scan(path, repo, sha, cfg.scan_timeout),
-        triage=lambda f: triage_finding(client, cfg.akash_model, f),
+        triage=lambda f: triage_finding(llm, cfg.llm_model, f),
     )
 
 
