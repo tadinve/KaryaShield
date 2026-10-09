@@ -371,7 +371,7 @@ Each run prints `run_id, mode, host, repo, sha, findings, actionable, issues_cre
 | 2:15 PM | M3 ledger | Real ClickHouse inserts and reads; reconciliation verified | **PASS 13:05** |
 | 2:30 PM | M4 web action (local) | Real GitHub issue; ClickHouse links to it | **PASS 13:05** ([issue #1](https://github.com/tadinve/KaryaShield/issues/1)) |
 | 2:30 PM | M5 repeatability (local) | Rerun: duplicate, zero new issues | **PASS 13:05** ([evidence](demo/evidence/m4_m5_issue_and_dedup.md)) |
-| 2:50 PM | M6 container | linux/amd64 image runs locally in dry-run; `/status` works; image pushed (authorized) | |
+| 2:50 PM | M6 container | linux/amd64 image runs locally in dry-run; `/status` works; image pushed (authorized) | **local PASS 13:12** ([evidence](demo/evidence/m6_container.md)); push pending |
 | 3:15 PM | M7 Akash | Lease active; Akash logs show cycles; `scan_runs.host='akash'` | |
 | 3:30 PM | Feature freeze | Rehearsal with live push; fallback screenshots and recording; README | |
 | 4:00 PM | Submission-ready | Repo, demo video, description submitted | |

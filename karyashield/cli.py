@@ -100,6 +100,8 @@ def _print_summary(rep: RunReport) -> None:
           f"elapsed={rep.elapsed_seconds}s")
     if rep.fatal:
         print(f"FATAL: {rep.fatal}")
+    if RUN_HOST != "local":
+        return  # containers: evidence lives in logs, /status and ClickHouse
     try:
         EVIDENCE.parent.mkdir(parents=True, exist_ok=True)
         EVIDENCE.write_text(json.dumps(rep.to_json(), indent=2))  # no snippets, no secrets
