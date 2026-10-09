@@ -1,7 +1,8 @@
+*.pyc
 .env
+.pytest_cache/
 .venv/
 .workspaces/
 __pycache__/
-*.pyc
-.pytest_cache/
 demo/evidence/last_run.json
+deploy/*.local.yaml

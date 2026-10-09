@@ -41,8 +41,11 @@ DDL = [
     """CREATE TABLE IF NOT EXISTS {db}.scan_runs (
         run_id String, at DateTime64(3, 'UTC'), repo String, sha String, mode LowCardinality(String),
         findings UInt32, actionable UInt32, issues_created UInt32, duplicates_skipped UInt32,
-        reconciled UInt32, errors UInt32, elapsed_seconds Float32, fatal String
+        reconciled UInt32, errors UInt32, elapsed_seconds Float32, fatal String,
+        host LowCardinality(String) DEFAULT 'local'
     ) ENGINE = MergeTree ORDER BY at""",
+    # Migration for tables created before the host column existed.
+    "ALTER TABLE {db}.scan_runs ADD COLUMN IF NOT EXISTS host LowCardinality(String) DEFAULT 'local'",
 ]
 
 
@@ -195,6 +198,7 @@ class Ledger:
             "mode": rep_json["mode"], **{k: int(rep_json[k]) for k in (
                 "findings", "actionable", "issues_created", "duplicates_skipped", "reconciled", "errors")},
             "elapsed_seconds": float(rep_json["elapsed_seconds"]), "fatal": rep_json["fatal"] or "",
+            "host": str(rep_json.get("host", "local")),
         })
 
     def recent(self, n: int = 10) -> list[dict]:

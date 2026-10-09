@@ -4,12 +4,15 @@ from __future__ import annotations
 import argparse
 import fcntl
 import json
+import os
+from datetime import datetime, timezone
 import shutil
 import subprocess
 import sys
 import time
 
 from . import github_adapter as gh
+from . import health
 from .config import PROJECT_ROOT, RULES_FILE, ConfigError, load_config
 from .scanner import scan, semgrep_bin
 from .store import ClickHouseBackend, Ledger
@@ -17,6 +20,8 @@ from .triage import make_client, triage_finding
 from .workflow import Deps, RunReport, run_once
 
 EVIDENCE = PROJECT_ROOT / "demo" / "evidence" / "last_run.json"
+# Where this process runs ("local" or "akash"); recorded in ClickHouse scan_runs.
+RUN_HOST = os.getenv("KARYASHIELD_HOST", "local").strip()[:32] or "local"
 
 
 def _ok(name: str, ok: bool, detail: str = "") -> bool:
@@ -89,7 +94,7 @@ def _deps(cfg) -> Deps:
 
 def _print_summary(rep: RunReport) -> None:
     print("-" * 60)
-    print(f"run_id={rep.run_id} mode={rep.mode} repo={rep.repo} sha={rep.sha}")
+    print(f"run_id={rep.run_id} mode={rep.mode} host={RUN_HOST} repo={rep.repo} sha={rep.sha}")
     print(f"findings={rep.findings} actionable={rep.actionable} issues_created={rep.issues_created} "
           f"duplicates_skipped={rep.duplicates_skipped} reconciled={rep.reconciled} errors={rep.errors} "
           f"elapsed={rep.elapsed_seconds}s")
@@ -115,7 +120,7 @@ def _run(cfg, dry_run: bool) -> RunReport:
     _print_summary(rep)
     if rep.mode == "write":
         try:
-            ledger.record_run(rep.to_json())
+            ledger.record_run({**rep.to_json(), "host": RUN_HOST})
         except Exception as e:
             print(f"(could not record run analytics: {type(e).__name__})")
     return rep
@@ -153,6 +158,47 @@ def cmd_watch(args) -> int:
     return rc
 
 
+def _log(msg: str) -> None:
+    print(f"{datetime.now(timezone.utc):%Y-%m-%dT%H:%M:%SZ} {msg}", flush=True)
+
+
+def cmd_worker(_args) -> int:
+    """Unbounded watch loop + status server (container entrypoint). Never crashes on a failed cycle."""
+    cfg = load_config()
+    port = int(os.getenv("STATUS_PORT", "8080"))
+    health.update(host=RUN_HOST, repo=cfg.github_repo)
+    health.serve(port)
+    _log(f"[WORKER] start host={RUN_HOST} repo={cfg.github_repo}@{cfg.github_branch} "
+         f"writes={'ENABLED' if cfg.enable_writes else 'disabled'} interval={cfg.watch_interval}s status=:{port}")
+    last_sha, delay, cycle = None, cfg.watch_interval, 0
+    while True:
+        cycle += 1
+        health.update(cycles=cycle)
+        try:
+            sha = gh.remote_head_sha(cfg.github_repo, cfg.github_branch)
+            if sha != last_sha:
+                _log(f"[WORKER] cycle {cycle}: {'initial' if last_sha is None else 'NEW COMMIT'} {sha} -> running")
+                rep = _run(cfg, dry_run=False)  # writes only if KARYASHIELD_ENABLE_WRITES=true
+                snap = health.snapshot()
+                health.update(runs=snap["runs"] + 1, last_sha=sha,
+                              total_issues_created=snap["total_issues_created"] + rep.issues_created,
+                              last_run={k: getattr(rep, k) for k in (
+                                  "run_id", "mode", "sha", "findings", "issues_created",
+                                  "duplicates_skipped", "reconciled", "errors", "elapsed_seconds")})
+                if rep.fatal:
+                    raise RuntimeError(rep.fatal)  # retry this SHA next cycle
+                last_sha = sha
+            else:
+                _log(f"[WORKER] cycle {cycle}: no new commit ({sha[:12]})")
+            health.update(last_error_type=None)
+            delay = cfg.watch_interval
+        except Exception as e:
+            health.update(last_error_type=type(e).__name__)
+            delay = min(max(delay * 2, cfg.watch_interval), 300)
+            _log(f"[WORKER] cycle {cycle} failed: {type(e).__name__}: {_scrub(cfg, str(e)[:200])}; retry in {delay}s")
+        time.sleep(delay)
+
+
 def cmd_status(args) -> int:
     cfg = load_config()
     ledger = Ledger(_backend(cfg))
@@ -181,6 +227,7 @@ def main(argv=None) -> int:
     w.add_argument("--max-cycles", type=int, default=2)
     w.add_argument("--dry-run", action="store_true")
     sub.add_parser("init-db")
+    sub.add_parser("worker")
     s = sub.add_parser("status")
     s.add_argument("-n", type=int, default=10)
     args = ap.parse_args(argv)
@@ -188,7 +235,7 @@ def main(argv=None) -> int:
         print("gh CLI not found")
         return 1
     try:
-        return {"doctor": cmd_doctor, "run": cmd_run, "watch": cmd_watch, "status": cmd_status, "init-db": cmd_init_db}[args.cmd](args)
+        return {"doctor": cmd_doctor, "run": cmd_run, "watch": cmd_watch, "status": cmd_status, "init-db": cmd_init_db, "worker": cmd_worker}[args.cmd](args)
     except ConfigError as e:
         print(f"config error: {e}")
         return 1

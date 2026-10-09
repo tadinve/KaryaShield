@@ -1,0 +1,57 @@
+---
+# KaryaShield worker on Akash Network. TEMPLATE: placeholders only, never commit real values.
+# Fill secrets in Akash Console's env editor or in deploy/akash.sdl.local.yaml (gitignored).
+# Akash env vars are visible to the hosting provider: use scoped, short-lived credentials (SPEC §4.2).
+version: "2.0"
+
+services:
+  karyashield:
+    image: ghcr.io/tadinve/karyashield:REPLACE_WITH_GIT_SHA
+    env:
+      - KARYASHIELD_HOST=akash
+      - GITHUB_REPO=tadinve/KaryaShield
+      - DEMO_REPO_ALLOWLIST=tadinve/KaryaShield
+      - GITHUB_BRANCH=main
+      - KARYASHIELD_ENABLE_WRITES=false
+      - KARYASHIELD_MIN_SEVERITY=WARNING
+      - WATCH_INTERVAL_SECONDS=20
+      - LLM_PROVIDER=vertex
+      - LLM_MODEL=gemini-2.5-flash
+      - GOOGLE_CLOUD_PROJECT=REPLACE_ME
+      - GOOGLE_CLOUD_LOCATION=us-central1
+      - GOOGLE_APPLICATION_CREDENTIALS_JSON=REPLACE_ME_SERVICE_ACCOUNT_JSON_ONE_LINE
+      - CLICKHOUSE_HOST=REPLACE_ME.clickhouse.cloud
+      - CLICKHOUSE_PORT=8443
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_PASSWORD=REPLACE_ME
+      - CLICKHOUSE_DATABASE=karyashield
+      - CLICKHOUSE_SECURE=true
+      - GH_TOKEN=REPLACE_ME_FINE_GRAINED_PAT
+    expose:
+      - port: 8080
+        as: 80
+        to:
+          - global: true
+
+profiles:
+  compute:
+    karyashield:
+      resources:
+        cpu:
+          units: 1.0
+        memory:
+          size: 2Gi
+        storage:
+          size: 4Gi
+  placement:
+    dcloud:
+      pricing:
+        karyashield:
+          denom: uakt
+          amount: 10000
+
+deployment:
+  karyashield:
+    dcloud:
+      profile: karyashield
+      count: 1
