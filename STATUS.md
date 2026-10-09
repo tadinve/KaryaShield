@@ -1,5 +1,5 @@
 # KaryaShield Status
-- Updated at: 2026-10-09 12:40 PDT
+- Updated at: 2026-10-09 13:02 PDT
 - Milestone completed: M1 PASS (11:44), M2 PASS (12:38, Gemini on Vertex AI). M0 partial: ClickHouse service + label pending.
 - Last actual command: live fetch + Semgrep + `triage_finding` (Vertex Gemini) on tadinve/KaryaShield@0466b57
 - Result: PASS. Schema-valid triage (risk=high, actionable, confidence 0.9) in 8.9s. Evidence: demo/evidence/m2_triage.md
@@ -23,3 +23,4 @@
 - 12:20 ClickHouse creds received but host is *.pg.clickhouse.cloud (managed Postgres; only :5432 open, :8443/:9440 closed). ClickHouse NOT verified.
 - 12:35 Spec rev 5: Akash Network hosts the worker (Docker + SDL); triage via configurable OpenAI-compatible LLM (non-sponsor); milestones M6 container, M7 Akash.
 - 12:38 M2 PASS: real Gemini 2.5 Flash (Vertex AI, project qwiklabs-gcp-02-…) triage of the real finding; evidence demo/evidence/m2_triage.md. LLM_PROVIDER=vertex|openai_compat added.
+- 13:01 Real ClickHouse service (GCP us-central1) reachable; fixed TLS CERTIFICATE_VERIFY_FAILED (python.org macOS build lacks root CAs) by passing certifi CA bundle. doctor: ClickHouse ping PASS, LLM PASS; schema + label pending builder authorization.

@@ -5,3 +5,4 @@ pydantic>=2.7
 python-dotenv>=1.0
 pytest>=8.0
 semgrep>=1.100
+certifi>=2024.0
