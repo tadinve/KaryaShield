@@ -201,5 +201,8 @@ class Ledger:
             "host": str(rep_json.get("host", "local")),
         })
 
+    def event(self, fp: str, kind: str, detail: str, run_id: str) -> None:
+        self.b.event(fp, kind, detail, run_id)
+
     def recent(self, n: int = 10) -> list[dict]:
         return self.b.recent(n)

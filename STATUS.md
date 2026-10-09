@@ -34,3 +34,4 @@
 - 13:40 init-db migration (builder OK): scan_runs.host added; existing 2 rows backfilled as 'local'.
 - 13:48 Image pushed (public). Deploy script TLS (certifi) + User-Agent fixes (Cloudflare 1010 blocked urllib default UA). Akash deployment dseq 1791578920187 active; 20:49:25Z scan_runs host='akash' (duplicate, 0 issues).
 - 13:55 Akash worker autonomously processed new commit 3517894 ~25s after push (scan_runs host=akash, duplicate, 0 issues).
+- 14:41 CodeMender-style remediation added (karyashield/mender.py): LLM proposes whole-file fix; sandbox verifies statically (ast.parse, Semgrep re-scan finding 1→0, no new findings, ≤40 changed lines). Real run on flaw #1: VERIFIED (8.8s). 58 tests pass. Verified patches go into new issues as a suggested diff (never applied).

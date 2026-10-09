@@ -28,6 +28,7 @@ class Deps:
     create_issue: Callable = gh.create_issue
     build_issue: Callable = gh.build_issue
     llm_label: str = "LLM"
+    mend: Callable | None = None  # (finding, checkout_path) -> PatchResult; None = disabled
 
 
 @dataclass
@@ -54,7 +55,7 @@ class RunReport:
 
 
 def process_finding(cfg: Config, f: Finding, ledger: Ledger, deps: Deps, run_id: str,
-                    checkout_sha: str, created_so_far: int, writes: bool) -> FindingOutcome:
+                    checkout_sha: str, created_so_far: int, writes: bool, checkout_path=None) -> FindingOutcome:
     base = dict(fingerprint=f.fingerprint, rule_id=f.rule_id, path=f.path, start_line=f.start_line)
     doc = ledger.get(f.fingerprint)
 
@@ -77,7 +78,11 @@ def process_finding(cfg: Config, f: Finding, ledger: Ledger, deps: Deps, run_id:
         if other:
             return FindingOutcome(**base, action="blocked", detail="; ".join(other))
         status = f" (ledger status: {doc['status']})" if doc else ""
-        return FindingOutcome(**base, action="would_create", detail=f"all gates pass except write gate{status}")
+        patch_note = ""
+        if deps.mend:
+            p = deps.mend(f, checkout_path)
+            patch_note = f"; patch {p.status}" + (f" ({p.reason})" if p.reason else "")
+        return FindingOutcome(**base, action="would_create", detail=f"all gates pass except write gate{status}{patch_note}")
 
     if not tr.ok:
         return FindingOutcome(**base, action="triage_error", detail=tr.error or "")
@@ -121,7 +126,10 @@ def process_finding(cfg: Config, f: Finding, ledger: Ledger, deps: Deps, run_id:
             return FindingOutcome(**base, action="blocked", detail=f"unexpected ledger status {status!r}")
 
     # --- CREATE_ISSUE -> RECORD ---
-    title, body = deps.build_issue(f, tr.triage, deps.llm_label)
+    patch = deps.mend(f, checkout_path) if deps.mend else None
+    if patch is not None:
+        ledger.event(f.fingerprint, f"patch_{patch.status}", patch.reason or "; ".join(patch.checks), run_id)
+    title, body = deps.build_issue(f, tr.triage, deps.llm_label, patch)
     try:
         url = deps.create_issue(f.repo, title, body)
     except gh.WriteUncertain as e:
@@ -154,7 +162,7 @@ def run_once(cfg: Config, ledger: Ledger, deps: Deps, *, dry_run: bool, log=prin
         for f in findings:
             log(f"[TRIAGE/POLICY] {f.rule_id} {f.path}:{f.start_line} fp={f.fingerprint[:12]}")
             try:
-                o = process_finding(cfg, f, ledger, deps, rep.run_id, co.sha, rep.issues_created, writes)
+                o = process_finding(cfg, f, ledger, deps, rep.run_id, co.sha, rep.issues_created, writes, co.path)
             except gh.GitHubError as e:
                 o = FindingOutcome(fingerprint=f.fingerprint, rule_id=f.rule_id, path=f.path,
                                    start_line=f.start_line, action="error", detail=str(e))

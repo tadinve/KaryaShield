@@ -16,6 +16,7 @@ from . import health
 from .config import PROJECT_ROOT, RULES_FILE, ConfigError, load_config
 from .scanner import scan, semgrep_bin
 from .store import ClickHouseBackend, Ledger
+from .mender import propose_and_verify
 from .triage import make_client, triage_finding
 from .workflow import Deps, RunReport, run_once
 
@@ -89,7 +90,37 @@ def _deps(cfg) -> Deps:
         scan=lambda path, repo, sha: scan(path, repo, sha, cfg.scan_timeout),
         triage=lambda f: triage_finding(llm, cfg.llm_model, f),
         llm_label=llm.label,
+        mend=(lambda f, path: propose_and_verify(llm, cfg.llm_model, path, f, _sandbox_scan_fn(cfg, f)))
+        if cfg.propose_patch else None,
     )
+
+
+def _sandbox_scan_fn(cfg, f):
+    return lambda sb: scan(sb, f.repo, f.commit_sha, cfg.scan_timeout)[0]
+
+
+def cmd_mend(_args) -> int:
+    """Read-only: propose + sandbox-verify a patch for each current finding and print it. No writes anywhere."""
+    cfg = load_config()
+    co = gh.fetch_checkout(cfg.github_repo, cfg.github_branch, cfg.workspace_dir)
+    findings, _ = scan(co.path, cfg.github_repo, co.sha, cfg.scan_timeout)
+    print(f"[MEND] {cfg.github_repo}@{co.sha[:12]}: {len(findings)} finding(s); LLM={make_client(cfg).label}")
+    llm = make_client(cfg)
+    rc = 0
+    for f in findings:
+        t0 = time.monotonic()
+        p = propose_and_verify(llm, cfg.llm_model, co.path, f, _sandbox_scan_fn(cfg, f))
+        print(f"\n=== {f.rule_id} {f.path}:{f.start_line} -> PATCH {p.status.upper()} ({time.monotonic()-t0:.1f}s)")
+        if p.reason:
+            print(f"reason: {p.reason}")
+        for c in p.checks:
+            print(f"  ✓ {c}")
+        if p.explanation:
+            print(f"explanation: {p.explanation}")
+        if p.diff:
+            print(p.diff)
+        rc |= 0 if p.status == "verified" else 1
+    return rc
 
 
 def _print_summary(rep: RunReport) -> None:
@@ -231,6 +262,7 @@ def main(argv=None) -> int:
     w.add_argument("--dry-run", action="store_true")
     sub.add_parser("init-db")
     sub.add_parser("worker")
+    sub.add_parser("mend")
     s = sub.add_parser("status")
     s.add_argument("-n", type=int, default=10)
     args = ap.parse_args(argv)
@@ -238,7 +270,7 @@ def main(argv=None) -> int:
         print("gh CLI not found")
         return 1
     try:
-        return {"doctor": cmd_doctor, "run": cmd_run, "watch": cmd_watch, "status": cmd_status, "init-db": cmd_init_db, "worker": cmd_worker}[args.cmd](args)
+        return {"doctor": cmd_doctor, "run": cmd_run, "watch": cmd_watch, "status": cmd_status, "init-db": cmd_init_db, "worker": cmd_worker, "mend": cmd_mend}[args.cmd](args)
     except ConfigError as e:
         print(f"config error: {e}")
         return 1

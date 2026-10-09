@@ -78,39 +78,41 @@ def make_client(cfg) -> LLMClient:
     return LLMClient("openai_compat", c, f"{cfg.llm_model} via {cfg.llm_base_url}")
 
 
-def _call_vertex(llm: LLMClient, model: str, f: Finding) -> str:
-    from google.genai import types
+def generate_json(llm: LLMClient, model: str, system: str, user: str, schema, max_tokens: int = 1500) -> str:
+    """One structured-output LLM call; returns raw JSON text (callers validate with Pydantic)."""
+    if llm.provider in ("vertex", "gemini_api"):
+        from google.genai import types
 
-    resp = llm.client.models.generate_content(
-        model=model, contents=_evidence(f),
-        config=types.GenerateContentConfig(system_instruction=INSTRUCTIONS, temperature=0,
-                                           response_mime_type="application/json", response_schema=Triage),
-    )
-    return resp.text or ""
-
-
-def _call_openai_compat(llm: LLMClient, model: str, f: Finding) -> str:
+        resp = llm.client.models.generate_content(
+            model=model, contents=user,
+            config=types.GenerateContentConfig(system_instruction=system, temperature=0,
+                                               response_mime_type="application/json", response_schema=schema),
+        )
+        return resp.text or ""
     from openai import BadRequestError
 
-    messages = [{"role": "system", "content": INSTRUCTIONS}, {"role": "user", "content": _evidence(f)}]
-    kw = dict(model=model, messages=messages, temperature=0, max_completion_tokens=1500)
+    messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
+    kw = dict(model=model, messages=messages, temperature=0, max_completion_tokens=max_tokens)
     try:
         resp = llm.client.chat.completions.create(**kw, response_format={
-            "type": "json_schema", "json_schema": {"name": "triage", "schema": Triage.model_json_schema()}})
+            "type": "json_schema", "json_schema": {"name": schema.__name__.lower(), "schema": schema.model_json_schema()}})
     except BadRequestError:
-        # Model may not support json_schema; fall back to JSON mode (still validated below).
+        # Model may not support json_schema; fall back to JSON mode (still validated by the caller).
         resp = llm.client.chat.completions.create(**kw, response_format={"type": "json_object"})
     return resp.choices[0].message.content or ""
 
 
+def parse_json(raw: str):
+    return json.loads(_FENCE_RE.sub("", raw.strip()))
+
+
 def triage_finding(llm: LLMClient, model: str, f: Finding) -> TriageResult:
     try:
-        raw = (_call_vertex(llm, model, f) if llm.provider in ("vertex", "gemini_api")
-               else _call_openai_compat(llm, model, f))
+        raw = generate_json(llm, model, INSTRUCTIONS, _evidence(f), Triage)
     except Exception as e:  # transport, auth, quota, safety block
         return TriageResult(ok=False, error=f"{type(e).__name__}: {str(e)[:300]}")
     try:
-        t = _sanitize(Triage.model_validate(json.loads(_FENCE_RE.sub("", raw.strip()))))
+        t = _sanitize(Triage.model_validate(parse_json(raw)))
     except Exception as e:
         return TriageResult(ok=False, error=f"no valid structured output (refusal or schema failure): {str(e)[:200]}")
     if not t.summary or not t.recommended_fix:

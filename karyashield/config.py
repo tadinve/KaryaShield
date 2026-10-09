@@ -59,6 +59,7 @@ class Config:
     scan_timeout: int
     llm_timeout: int
     watch_interval: int
+    propose_patch: bool = True
 
     def redacted(self) -> dict:
         return {
@@ -143,4 +144,5 @@ def load_config(env_file: Path | None = None) -> Config:
         scan_timeout=_int("SCAN_TIMEOUT_SECONDS", 90),
         llm_timeout=_int("LLM_TIMEOUT_SECONDS", 45),
         watch_interval=_int("WATCH_INTERVAL_SECONDS", 120),
+        propose_patch=os.getenv("KARYASHIELD_PROPOSE_PATCH", "true").strip().lower() == "true",
     )

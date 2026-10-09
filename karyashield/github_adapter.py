@@ -127,12 +127,23 @@ def validate_issue_url(repo: str, url: str) -> str:
     return url
 
 
+def _patch_section(patch) -> str:
+    if patch is None:
+        return ""
+    if patch.status != "verified":
+        return f"## Proposed patch\n\nNo verified patch ({patch.status}: {patch.reason}).\n\n"
+    checks = "\n".join(f"- {c}" for c in patch.checks)
+    return (f"## Proposed patch (AI-generated, sandbox-verified, NOT applied)\n\n{patch.explanation}\n\n"
+            f"Verification (static only; no code was executed):\n{checks}\n\n"
+            f"`````diff\n{patch.diff}`````\n\n_Apply only after human review._\n\n")
+
+
 def _close_fences(text: str) -> str:
     """LLM text may be truncated mid code block; close it so the footer and marker render correctly."""
     return text + "\n```" if text.count("```") % 2 else text
 
 
-def build_issue(f: Finding, t: Triage, model_label: str = "LLM") -> tuple[str, str]:
+def build_issue(f: Finding, t: Triage, model_label: str = "LLM", patch=None) -> tuple[str, str]:
     short = f.rule_id.split(".")[-1]
     title = f"[KaryaShield] {short} in {f.path}:{f.start_line}"[:200]
     blob = f"https://github.com/{f.repo}/blob/{f.commit_sha}/{f.path}#L{f.start_line}-L{f.end_line}"
@@ -162,7 +173,7 @@ def build_issue(f: Finding, t: Triage, model_label: str = "LLM") -> tuple[str, s
 
 **Suggested fix:** {_close_fences(t.recommended_fix)}
 
----
+{_patch_section(patch)}---
 _Filed autonomously by KaryaShield. Write authorized by deterministic policy (pinned rule match + severity + repo allowlist), not by the model._
 {marker(f.fingerprint)}
 """
