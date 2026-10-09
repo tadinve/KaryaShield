@@ -203,6 +203,16 @@ def cmd_worker(_args) -> int:
     port = int(os.getenv("STATUS_PORT", "8080"))
     health.update(host=RUN_HOST, repo=cfg.github_repo)
     health.serve(port)
+    if os.getenv("KARYASHIELD_MIGRATE_ON_START", "false").strip().lower() == "true":
+        # Idempotent schema migration (CREATE/ALTER ... IF NOT EXISTS), retried until ClickHouse answers.
+        for attempt in range(1, 6):
+            try:
+                _backend(cfg).init_schema()
+                _log("[WORKER] schema migration applied (idempotent)")
+                break
+            except Exception as e:
+                _log(f"[WORKER] migration attempt {attempt} failed: {type(e).__name__}; retrying")
+                time.sleep(10)
     _log(f"[WORKER] start host={RUN_HOST} repo={cfg.github_repo}@{cfg.github_branch} "
          f"writes={'ENABLED' if cfg.enable_writes else 'disabled'} interval={cfg.watch_interval}s status=:{port}")
     last_sha, delay, cycle = None, cfg.watch_interval, 0
