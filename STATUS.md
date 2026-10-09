@@ -30,3 +30,4 @@
 - 13:27 Akash Console API key verified read-only (balance $26, 0 deployments); deploy script deploy/akash_deploy.py; SDL denom uact (from Console templates).
 - 13:31 Gemini API key: gemini-2.5-flash unavailable to new keys; gemini-3.8-flash real triage ok (6.1s). LLM_PROVIDER=gemini_api now default (local + Akash); Vertex creds no longer needed in the container.
 - 13:32 ClickHouse idle wake-up caused a 30s read timeout; worker now pings ClickHouse on quiet cycles; read timeout 90s. doctor ALL PASS.
+- 13:36 Switched to gemini-3.6-flash (builder: 3.8 intermittently 429s). Real triage 2/2 ok (13.8s, 11.8s).
