@@ -20,6 +20,8 @@ class Finding(BaseModel):
     commit_sha: str
     repo: str  # from validated config, never from LLM output
     fingerprint: str
+    cwe_id: str = ""  # explicit rule→CWE mapping (karyashield/cwe.py), never model output
+    cwe_source_url: str = ""
 
 
 class Triage(BaseModel):

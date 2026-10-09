@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .config import ISSUE_LABEL, validate_repo
+from .cwe import CISA_KEV_URL, CVE_PROGRAM_URL, classify, top25_label
 from .models import Finding, Triage
 
 MARKER_PREFIX = "<!-- karyashield:fingerprint="
@@ -127,6 +128,25 @@ def validate_issue_url(repo: str, url: str) -> str:
     return url
 
 
+def _cwe_cell(f: Finding) -> str:
+    info = classify(f.rule_id)
+    if not info:
+        return "unclassified"
+    return (f"[{info.cwe_id}]({info.source_url}) {info.name} ({top25_label(info)}). "
+            f"Asserted rule mapping, not proof of exploitability")
+
+
+def _stages(patch) -> str:
+    verified = patch is not None and patch.status == "verified" and any("sandbox exploit test" in c for c in patch.checks)
+    return ("| Stage | Status | Basis |\n|---|---|---|\n"
+            "| DETECTED | yes | Semgrep pinned rule match at this commit |\n"
+            "| CLASSIFIED | yes | explicit rule→CWE mapping |\n"
+            "| TRIAGED | yes | LLM assessment (advisory) |\n"
+            f"| VERIFIED | {'yes' if verified else 'no'} | "
+            f"{'sandboxed differential exploit test' if verified else 'no isolated test evidence'} |\n"
+            "| REMEDIATED | no | only when a human merges a fix |\n\n")
+
+
 def _patch_section(patch) -> str:
     if patch is None:
         return ""
@@ -156,6 +176,8 @@ def build_issue(f: Finding, t: Triage, model_label: str = "LLM", patch=None) -> 
 | Severity | {f.severity} |
 | Location | [`{f.path}` lines {f.start_line}-{f.end_line}]({blob}) |
 | Commit | `{f.commit_sha}` |
+| CWE (classified) | {_cwe_cell(f)} |
+| CVE | Not applicable: first-party code weakness, not a published vulnerability. No CVE assigned or claimed ([CVE program]({CVE_PROGRAM_URL})); [CISA KEV]({CISA_KEV_URL}) not consulted |
 
 **Semgrep message:** {f.message}
 
@@ -164,6 +186,7 @@ def build_issue(f: Finding, t: Triage, model_label: str = "LLM", patch=None) -> 
 {f.snippet}
 {fence}
 
+{_stages(patch)}
 ## AI assessment ({model_label}, advisory — not verified by a human)
 
 - **Risk level:** {t.risk_level}

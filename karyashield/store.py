@@ -23,6 +23,7 @@ INCIDENT_COLUMNS = [
     "fingerprint", "repo", "rule_id", "path", "line", "severity", "first_seen_commit",
     "last_seen_commit", "status", "reserved_by", "reserved_at", "triage_summary", "triage_risk",
     "triage_actionable", "triage_confidence", "github_issue_url", "created_at", "updated_at", "version",
+    "cwe_id", "cwe_source_url",
 ]
 
 DDL = [
@@ -32,8 +33,11 @@ DDL = [
         status LowCardinality(String), reserved_by String, reserved_at DateTime64(3, 'UTC'),
         triage_summary String, triage_risk LowCardinality(String), triage_actionable UInt8,
         triage_confidence Float32, github_issue_url String,
-        created_at DateTime64(3, 'UTC'), updated_at DateTime64(3, 'UTC'), version UInt64
+        created_at DateTime64(3, 'UTC'), updated_at DateTime64(3, 'UTC'), version UInt64,
+        cwe_id LowCardinality(String) DEFAULT '', cwe_source_url String DEFAULT ''
     ) ENGINE = ReplacingMergeTree(version) ORDER BY fingerprint""",
+    "ALTER TABLE {db}.incidents ADD COLUMN IF NOT EXISTS cwe_id LowCardinality(String) DEFAULT ''",
+    "ALTER TABLE {db}.incidents ADD COLUMN IF NOT EXISTS cwe_source_url String DEFAULT ''",
     """CREATE TABLE IF NOT EXISTS {db}.incident_events (
         fingerprint String, at DateTime64(3, 'UTC'), type LowCardinality(String),
         detail String, run_id String
@@ -149,6 +153,7 @@ class Ledger:
             "triage_risk": triage.risk_level if triage else "", "triage_actionable": int(bool(triage and triage.is_actionable)),
             "triage_confidence": float(triage.confidence) if triage else 0.0,
             "github_issue_url": "", "created_at": now,
+            "cwe_id": f.cwe_id, "cwe_source_url": f.cwe_source_url,
         }
         self._write(doc, "detected", f"run {run_id} reserved at {f.commit_sha[:12]}", run_id)
         # Verify we hold the reservation (guards against a concurrent writer).

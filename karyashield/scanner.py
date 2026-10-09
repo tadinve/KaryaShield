@@ -11,6 +11,7 @@ import sys
 from pathlib import Path, PurePosixPath
 
 from .config import PINNED_RULE_IDS, RULES_FILE
+from .cwe import classify
 from .models import Finding
 
 MAX_SNIPPET_LINES = 20
@@ -154,7 +155,9 @@ def parse_semgrep_json(raw: str, checkout: Path, repo: str, commit_sha: str) -> 
         key = (rule_id, rel, norm)
         occ = seen.get(key, 0)
         seen[key] = occ + 1
+        cwe = classify(rule_id)
         findings.append(Finding(
+            cwe_id=cwe.cwe_id if cwe else "", cwe_source_url=cwe.source_url if cwe else "",
             rule_id=rule_id, path=rel, start_line=start, end_line=end, severity=sev,
             message=redact(message)[:MAX_MESSAGE_CHARS], snippet=snippet,
             commit_sha=commit_sha, repo=repo,

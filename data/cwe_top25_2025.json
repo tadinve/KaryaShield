@@ -1,0 +1,157 @@
+{
+  "source": "MITRE 2025 CWE Top 25",
+  "source_url": "https://cwe.mitre.org/top25/archive/2025/2025_cwe_top25",
+  "note": "Short names abbreviated for implementation convenience; see official pages for complete definitions. Classification reference only, not detector rules.",
+  "weaknesses": [
+    {
+      "rank": 1,
+      "cwe_id": "CWE-79",
+      "short_name": "Cross-site Scripting",
+      "official_url": "https://cwe.mitre.org/data/definitions/79.html"
+    },
+    {
+      "rank": 2,
+      "cwe_id": "CWE-89",
+      "short_name": "SQL Injection",
+      "official_url": "https://cwe.mitre.org/data/definitions/89.html"
+    },
+    {
+      "rank": 3,
+      "cwe_id": "CWE-352",
+      "short_name": "Cross-Site Request Forgery",
+      "official_url": "https://cwe.mitre.org/data/definitions/352.html"
+    },
+    {
+      "rank": 4,
+      "cwe_id": "CWE-862",
+      "short_name": "Missing Authorization",
+      "official_url": "https://cwe.mitre.org/data/definitions/862.html"
+    },
+    {
+      "rank": 5,
+      "cwe_id": "CWE-787",
+      "short_name": "Out-of-bounds Write",
+      "official_url": "https://cwe.mitre.org/data/definitions/787.html"
+    },
+    {
+      "rank": 6,
+      "cwe_id": "CWE-22",
+      "short_name": "Path Traversal",
+      "official_url": "https://cwe.mitre.org/data/definitions/22.html"
+    },
+    {
+      "rank": 7,
+      "cwe_id": "CWE-416",
+      "short_name": "Use After Free",
+      "official_url": "https://cwe.mitre.org/data/definitions/416.html"
+    },
+    {
+      "rank": 8,
+      "cwe_id": "CWE-125",
+      "short_name": "Out-of-bounds Read",
+      "official_url": "https://cwe.mitre.org/data/definitions/125.html"
+    },
+    {
+      "rank": 9,
+      "cwe_id": "CWE-78",
+      "short_name": "OS Command Injection",
+      "official_url": "https://cwe.mitre.org/data/definitions/78.html"
+    },
+    {
+      "rank": 10,
+      "cwe_id": "CWE-94",
+      "short_name": "Code Injection",
+      "official_url": "https://cwe.mitre.org/data/definitions/94.html"
+    },
+    {
+      "rank": 11,
+      "cwe_id": "CWE-120",
+      "short_name": "Classic Buffer Overflow",
+      "official_url": "https://cwe.mitre.org/data/definitions/120.html"
+    },
+    {
+      "rank": 12,
+      "cwe_id": "CWE-434",
+      "short_name": "Unrestricted Upload of Dangerous File Type",
+      "official_url": "https://cwe.mitre.org/data/definitions/434.html"
+    },
+    {
+      "rank": 13,
+      "cwe_id": "CWE-476",
+      "short_name": "NULL Pointer Dereference",
+      "official_url": "https://cwe.mitre.org/data/definitions/476.html"
+    },
+    {
+      "rank": 14,
+      "cwe_id": "CWE-121",
+      "short_name": "Stack-based Buffer Overflow",
+      "official_url": "https://cwe.mitre.org/data/definitions/121.html"
+    },
+    {
+      "rank": 15,
+      "cwe_id": "CWE-502",
+      "short_name": "Deserialization of Untrusted Data",
+      "official_url": "https://cwe.mitre.org/data/definitions/502.html"
+    },
+    {
+      "rank": 16,
+      "cwe_id": "CWE-122",
+      "short_name": "Heap-based Buffer Overflow",
+      "official_url": "https://cwe.mitre.org/data/definitions/122.html"
+    },
+    {
+      "rank": 17,
+      "cwe_id": "CWE-863",
+      "short_name": "Incorrect Authorization",
+      "official_url": "https://cwe.mitre.org/data/definitions/863.html"
+    },
+    {
+      "rank": 18,
+      "cwe_id": "CWE-20",
+      "short_name": "Improper Input Validation",
+      "official_url": "https://cwe.mitre.org/data/definitions/20.html"
+    },
+    {
+      "rank": 19,
+      "cwe_id": "CWE-284",
+      "short_name": "Improper Access Control",
+      "official_url": "https://cwe.mitre.org/data/definitions/284.html"
+    },
+    {
+      "rank": 20,
+      "cwe_id": "CWE-200",
+      "short_name": "Exposure of Sensitive Information",
+      "official_url": "https://cwe.mitre.org/data/definitions/200.html"
+    },
+    {
+      "rank": 21,
+      "cwe_id": "CWE-306",
+      "short_name": "Missing Authentication for Critical Function",
+      "official_url": "https://cwe.mitre.org/data/definitions/306.html"
+    },
+    {
+      "rank": 22,
+      "cwe_id": "CWE-918",
+      "short_name": "Server-Side Request Forgery",
+      "official_url": "https://cwe.mitre.org/data/definitions/918.html"
+    },
+    {
+      "rank": 23,
+      "cwe_id": "CWE-77",
+      "short_name": "Command Injection",
+      "official_url": "https://cwe.mitre.org/data/definitions/77.html"
+    },
+    {
+      "rank": 24,
+      "cwe_id": "CWE-639",
+      "short_name": "Authorization Bypass Through User-Controlled Key",
+      "official_url": "https://cwe.mitre.org/data/definitions/639.html"
+    },
+    {
+      "rank": 25,
+      "cwe_id": "CWE-770",
+      "short_name": "Allocation of Resources Without Limits or Throttling",
+      "official_url": "https://cwe.mitre.org/data/definitions/770.html"
+    }
+  ]
+}

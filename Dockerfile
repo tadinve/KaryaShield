@@ -19,6 +19,7 @@ RUN pip install -r requirements.txt
 
 COPY karyashield/ karyashield/
 COPY rules/ rules/
+COPY data/ data/
 COPY deploy/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod 755 /usr/local/bin/entrypoint.sh && useradd -m -u 10001 karya && mkdir -p /tmp/workspaces \
  && chown karya /tmp/workspaces
