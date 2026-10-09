@@ -1,12 +1,12 @@
 # KaryaShield Status
-- Updated at: 2026-10-09 13:02 PDT
-- Milestone completed: M1 PASS (11:44), M2 PASS (12:38, Gemini on Vertex AI). M0 partial: ClickHouse service + label pending.
-- Last actual command: live fetch + Semgrep + `triage_finding` (Vertex Gemini) on tadinve/KaryaShield@0466b57
-- Result: PASS. Schema-valid triage (risk=high, actionable, confidence 0.9) in 8.9s. Evidence: demo/evidence/m2_triage.md
-- Real integrations verified live: Semgrep ✅ · LLM (Gemini/Vertex, non-sponsor) ✅ · ClickHouse ❌ (have Postgres host, need ClickHouse service) · Akash Network ❌ (not deployed)
+- Updated at: 2026-10-09 13:05 PDT
+- Milestone completed: M0 PASS (doctor ALL PASS), M1 PASS, M2 PASS, real e2e dry run PASS (13:00). M3 partial: ClickHouse reads verified, inserts pending first write run.
+- Last actual command: `python -m karyashield.cli run --once --dry-run`
+- Result: PASS. 1 finding → WOULD_CREATE, 0 errors, 12.9s; ClickHouse incidents/events/scan_runs = 0 rows (no writes). Evidence: demo/evidence/m3_dryrun.md
+- Real integrations verified live: Semgrep ✅ · LLM (Gemini/Vertex, non-sponsor) ✅ · ClickHouse ✅ connect+schema+reads (inserts pending) · Akash Network ❌ (not deployed)
 - GitHub issue URL: NOT YET
-- Remaining blocker: (1) real ClickHouse service host/password in .env; (2) `karyashield` label; (3) Akash credits. Risk: GCP project is a Qwiklabs lab (may expire; service-account keys for the container may be blocked)
-- Next single action: builder creates a ClickHouse (not Postgres) service and updates .env; then init-db
+- Remaining blocker: builder OK to set KARYASHIELD_ENABLE_WRITES=true for the first real issue (M4). Then Akash credits for M7. Risk: Qwiklabs GCP project may expire.
+- Next single action: builder approves write run → `run --once` (issue #1), then rerun for duplicate proof (M5)
 - Submission state: NOT SUBMITTED
 
 ## Log
@@ -23,4 +23,5 @@
 - 12:20 ClickHouse creds received but host is *.pg.clickhouse.cloud (managed Postgres; only :5432 open, :8443/:9440 closed). ClickHouse NOT verified.
 - 12:35 Spec rev 5: Akash Network hosts the worker (Docker + SDL); triage via configurable OpenAI-compatible LLM (non-sponsor); milestones M6 container, M7 Akash.
 - 12:38 M2 PASS: real Gemini 2.5 Flash (Vertex AI, project qwiklabs-gcp-02-…) triage of the real finding; evidence demo/evidence/m2_triage.md. LLM_PROVIDER=vertex|openai_compat added.
-- 13:01 Real ClickHouse service (GCP us-central1) reachable; fixed TLS CERTIFICATE_VERIFY_FAILED (python.org macOS build lacks root CAs) by passing certifi CA bundle. doctor: ClickHouse ping PASS, LLM PASS; schema + label pending builder authorization.
+- ~13:00 Real ClickHouse service (GCP us-central1) reachable; fixed TLS CERTIFICATE_VERIFY_FAILED (python.org macOS build lacks root CAs) by passing certifi CA bundle. doctor: ClickHouse ping PASS, LLM PASS; schema + label pending builder authorization.
+- ~13:03 Label `karyashield` created + init-db (builder OK). doctor: ALL PASS. Real e2e dry run: WOULD_CREATE, ClickHouse 0 rows. Fixed truncated code fence in issue body; issue heading names the model.

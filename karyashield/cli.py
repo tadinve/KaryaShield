@@ -83,6 +83,7 @@ def _deps(cfg) -> Deps:
     return Deps(
         scan=lambda path, repo, sha: scan(path, repo, sha, cfg.scan_timeout),
         triage=lambda f: triage_finding(llm, cfg.llm_model, f),
+        llm_label=llm.label,
     )
 
 

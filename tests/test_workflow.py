@@ -98,3 +98,12 @@ def test_store_records_run_analytics(ledger, fake_gh):
     rep = run_once(make_cfg(), ledger, make_deps(fake_gh, [make_finding()]), dry_run=False, log=lambda *_: None)
     ledger.record_run(rep.to_json())
     assert ledger.b.runs[0]["issues_created"] == 1 and ledger.b.runs[0]["mode"] == "write"
+
+
+def test_truncated_code_fence_is_closed_before_marker():
+    from tests.conftest import GOOD_TRIAGE
+    t = GOOD_TRIAGE.triage.model_copy(update={"recommended_fix": "Do this:\n```python\nsubprocess.run([...]"})
+    f = make_finding()
+    _, body = gh.build_issue(f, t, "Gemini x on Vertex AI")
+    before_marker = body.split(gh.marker(f.fingerprint))[0]
+    assert before_marker.count("```") % 2 == 0 and "Gemini x on Vertex AI" in body

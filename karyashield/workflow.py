@@ -27,6 +27,7 @@ class Deps:
     find_issue: Callable = gh.find_issue_by_marker
     create_issue: Callable = gh.create_issue
     build_issue: Callable = gh.build_issue
+    llm_label: str = "LLM"
 
 
 @dataclass
@@ -120,7 +121,7 @@ def process_finding(cfg: Config, f: Finding, ledger: Ledger, deps: Deps, run_id:
             return FindingOutcome(**base, action="blocked", detail=f"unexpected ledger status {status!r}")
 
     # --- CREATE_ISSUE -> RECORD ---
-    title, body = deps.build_issue(f, tr.triage)
+    title, body = deps.build_issue(f, tr.triage, deps.llm_label)
     try:
         url = deps.create_issue(f.repo, title, body)
     except gh.WriteUncertain as e:

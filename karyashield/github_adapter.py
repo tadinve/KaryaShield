@@ -127,7 +127,12 @@ def validate_issue_url(repo: str, url: str) -> str:
     return url
 
 
-def build_issue(f: Finding, t: Triage) -> tuple[str, str]:
+def _close_fences(text: str) -> str:
+    """LLM text may be truncated mid code block; close it so the footer and marker render correctly."""
+    return text + "\n```" if text.count("```") % 2 else text
+
+
+def build_issue(f: Finding, t: Triage, model_label: str = "LLM") -> tuple[str, str]:
     short = f.rule_id.split(".")[-1]
     title = f"[KaryaShield] {short} in {f.path}:{f.start_line}"[:200]
     blob = f"https://github.com/{f.repo}/blob/{f.commit_sha}/{f.path}#L{f.start_line}-L{f.end_line}"
@@ -148,14 +153,14 @@ def build_issue(f: Finding, t: Triage) -> tuple[str, str]:
 {f.snippet}
 {fence}
 
-## AI assessment (LLM, advisory — not verified by a human)
+## AI assessment ({model_label}, advisory — not verified by a human)
 
 - **Risk level:** {t.risk_level}
 - **Summary:** {t.summary}
 
-**Why it matters:** {t.why_it_matters}
+**Why it matters:** {_close_fences(t.why_it_matters)}
 
-**Suggested fix:** {t.recommended_fix}
+**Suggested fix:** {_close_fences(t.recommended_fix)}
 
 ---
 _Filed autonomously by KaryaShield. Write authorized by deterministic policy (pinned rule match + severity + repo allowlist), not by the model._
