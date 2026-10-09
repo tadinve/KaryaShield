@@ -1,5 +1,5 @@
 # KaryaShield Status
-- Updated at: 2026-10-09 13:36 PDT
+- Updated at: 2026-10-09 13:33 PDT
 - Milestone completed: M0–M5 PASS (local, real services; MVP accepted). M6 PASS locally (container dry-run); image push pending builder OK.
 - Last actual command: `docker run … karyashield:local` (worker, dry-run) + in-container triage via entrypoint
 - Result: PASS. Container: fetch → scan → ClickHouse ledger → DUPLICATE issue #1; /healthz ok; /status JSON; Gemini triage in-container ok. Evidence: demo/evidence/m6_container.md
@@ -28,5 +28,5 @@
 - 13:05 M4 PASS: real issue https://github.com/tadinve/KaryaShield/issues/1 created; ClickHouse record links it. M5 PASS: rerun → duplicate, 0 issues. Write gate set back to false.
 - 13:10 M6 PASS (local): linux/amd64 image; worker dry-run in Docker saw issue #1 as duplicate via ClickHouse; /status works; in-container Vertex triage ok.
 - 13:27 Akash Console API key verified read-only (balance $26, 0 deployments); deploy script deploy/akash_deploy.py; SDL denom uact (from Console templates).
-- 13:33 Gemini API key: gemini-2.5-flash unavailable to new keys; gemini-3.8-flash real triage ok (6.1s). LLM_PROVIDER=gemini_api now default (local + Akash); Vertex creds no longer needed in the container.
-- 13:35 ClickHouse idle wake-up caused a 30s read timeout; worker now pings ClickHouse on quiet cycles; read timeout 90s. doctor ALL PASS.
+- 13:31 Gemini API key: gemini-2.5-flash unavailable to new keys; gemini-3.8-flash real triage ok (6.1s). LLM_PROVIDER=gemini_api now default (local + Akash); Vertex creds no longer needed in the container.
+- 13:32 ClickHouse idle wake-up caused a 30s read timeout; worker now pings ClickHouse on quiet cycles; read timeout 90s. doctor ALL PASS.

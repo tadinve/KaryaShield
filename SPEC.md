@@ -242,7 +242,7 @@ gh label create karyashield --repo tadinve/KaryaShield --color B60205 --descript
 - Per-file parse or timeout errors become warnings. Everything else is fatal.
 
 ### 6.3 Triage (configurable LLM provider)
-- **Current default (13:33): `LLM_PROVIDER=gemini_api`, `LLM_MODEL=gemini-3.8-flash`, `GEMINI_API_KEY`** — used locally and on Akash (no GCP credential file in the container). `gemini-2.5-flash` is unavailable to new API keys.
+- **Current default (13:31): `LLM_PROVIDER=gemini_api`, `LLM_MODEL=gemini-3.8-flash`, `GEMINI_API_KEY`** — used locally and on Akash (no GCP credential file in the container). `gemini-2.5-flash` is unavailable to new API keys.
 - `LLM_PROVIDER=vertex` (current): Gemini (`LLM_MODEL=gemini-2.5-flash`) on Vertex AI via `google-genai` with `GOOGLE_CLOUD_PROJECT`/`GOOGLE_CLOUD_LOCATION`, `response_schema=Triage`. Auth: ADC locally; in the container a dedicated service account with only `roles/aiplatform.user`, key passed as `GOOGLE_APPLICATION_CREDENTIALS_B64` (base64, YAML-safe in SDL) or `GOOGLE_APPLICATION_CREDENTIALS_JSON`, written to a 0600 temp file at start (provider-visible: delete the key after the event). If service-account keys are blocked, the container uses `LLM_PROVIDER=openai_compat` instead.
 - `LLM_PROVIDER=openai_compat`: the client below.
 - OpenAI SDK client with `base_url=LLM_BASE_URL`, `api_key=LLM_API_KEY`, timeout `LLM_TIMEOUT_SECONDS`, `max_retries=1`.
