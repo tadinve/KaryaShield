@@ -44,3 +44,9 @@ Commit `3517894` pushed at 13:54:50 PDT; the Akash worker scanned it ~25s later 
 ```
 (2026-10-09 20:55:16 UTC, host=akash, run da5523e88295, sha 35178941fa3f, findings=1, issues_created=0, duplicates_skipped=1, errors=0, 6.7s)
 ```
+
+## Redeploy with the mender (14:46–14:48 PDT, builder-authorized)
+
+- Old deployment 1791578920187 closed FIRST (single writer), then image `eef7d17` (digest sha256:3f266cfd1489…) deployed: dseq **1791582426373**, 8 bids, provider akash1aaul837r7…, ready at 14:47:57.
+- Live status page: http://jp4ikhmqk9alt94bi0g5c68d80.ingress.h6i-dedicated.eu-se-1.digitalfrontier.so/status
+- First cycle: write mode, sha eef7d17, findings=1, duplicates_skipped=1, issues_created=0, 9.1s; ClickHouse scan_runs host='akash'.

@@ -18,12 +18,14 @@ A KaryaShield worker runs on **Akash Network** and watches a GitHub repo. On eve
 3. asks an LLM to explain the finding and suggest a fix (advisory only)
 4. runs a **deterministic policy gate**: write switch, repo allowlist, SHA match, pinned rule, severity, valid triage, per-run cap
 5. checks **ClickHouse** and GitHub, so the same flaw is never filed twice
-6. files a **real GitHub issue** with evidence, a permalink, the AI assessment and a hidden fingerprint marker
-7. records the incident, an audit event and run analytics in **ClickHouse**
+6. **proposes a fix and verifies it in a sandbox** (CodeMender-style): the patched file must parse, a Semgrep re-scan must show the finding gone, no new findings may appear, and nothing is ever executed
+7. files a **real GitHub issue** with evidence, a permalink, the AI assessment, the verified patch (suggested, never applied) and a hidden fingerprint marker
+8. records the incident, an audit event and run analytics in **ClickHouse**
 
 Live proof:
 - Issue filed autonomously: **[tadinve/KaryaShield#1](https://github.com/tadinve/KaryaShield/issues/1)**
-- The worker runs on Akash (deployment `dseq 1791578920187`) and scans each new commit about 25 seconds after the push ([evidence](demo/evidence/m7_akash.md)).
+- The worker runs on Akash (deployment `dseq 1791582426373`), with a live status page at [http://jp4ikhmqk9alt94bi0g5c68d80.ingress.h6i-dedicated.eu-se-1.digitalfrontier.so/status](http://jp4ikhmqk9alt94bi0g5c68d80.ingress.h6i-dedicated.eu-se-1.digitalfrontier.so/status). It scanned a new commit about 25 seconds after the push ([evidence](demo/evidence/m7_akash.md)).
+- The patch is proposed by the model and verified statically in a sandbox ([evidence](demo/evidence/mender.md)): flaw #1 `shell=True` → argument list, flaw #2 `eval` → `ast.literal_eval`.
 
 ## Sponsor tools
 
@@ -72,7 +74,7 @@ Not counted as sponsor tools: **Gemini** (`gemini-3.6-flash`, the triage LLM, sw
 |---|---|
 | Autonomy | An unattended worker on Akash reacts to pushes with no human in the loop |
 | Idea | Evidence-grounded security triage that ends in a real, tracked issue |
-| Technical implementation | Typed contracts, deterministic gate, idempotent state machine, crash reconciliation, 51 tests |
+| Technical implementation | Typed contracts, deterministic gate, idempotent state machine, crash reconciliation, sandbox-verified patches, 58 tests |
 | Tool use | Semgrep, Akash and ClickHouse each do real work, with evidence for each |
 | Presentation | A live push of a new flaw → the Akash worker files a new issue → ClickHouse records it → the next cycle creates no duplicate |
 
@@ -88,6 +90,7 @@ gh label create karyashield --repo OWNER/REPO
 .venv/bin/python -m karyashield.cli run --once             # writes only if KARYASHIELD_ENABLE_WRITES=true
 .venv/bin/python -m karyashield.cli watch --max-cycles 3   # bounded local monitoring
 .venv/bin/python -m karyashield.cli worker                 # unbounded loop + status server (container)
+.venv/bin/python -m karyashield.cli mend                   # read-only: propose + sandbox-verify patches
 .venv/bin/python -m karyashield.cli status                 # latest incidents
 ```
 
@@ -107,15 +110,16 @@ Akash deployment env vars are visible to the provider, so the worker gets narrow
 | M4/M5 real issue + no duplicate | [m4_m5_issue_and_dedup.md](demo/evidence/m4_m5_issue_and_dedup.md) |
 | M6 container | [m6_container.md](demo/evidence/m6_container.md) |
 | M7 worker on Akash | [m7_akash.md](demo/evidence/m7_akash.md) |
+| Sandbox-verified patch | [mender.md](demo/evidence/mender.md) |
 
-Tests: `.venv/bin/python -m pytest -q` → **51 passed**. They cover path traversal and symlink escapes, the allowlist, the write gate, dry runs that write nothing, idempotency, crash reconciliation, `write_uncertain`, the per-run cap, fingerprint stability, and model failure modes. Unit tests use fakes; live integrations are proven only by the evidence files above.
+Tests: `.venv/bin/python -m pytest -q` → **58 passed**. They cover path traversal and symlink escapes, the allowlist, the write gate, dry runs that write nothing, idempotency, crash reconciliation, `write_uncertain`, the per-run cap, fingerprint stability, model failure modes, and patch verification (good patch verified; cosmetic, syntax-error, new-vulnerability and oversized patches rejected; repo untouched). Unit tests use fakes; live integrations are proven only by the evidence files above.
 
 ## Limitations (honest)
 
 - **Coverage:** exactly two pinned Semgrep rules (CWE-78 `subprocess(..., shell=True)` and CWE-95 `eval` on non-literals). This is not a general scanner.
 - **Single writer:** duplicate prevention assumes one worker replica, because ClickHouse has no compare-and-set. The GitHub marker check is the backstop.
 - **Fingerprints:** renaming a file or editing the flagged line produces a new fingerprint.
-- **Status page:** the Akash provider's ingress returned 404 for the worker's `/status` page during the event. The worker itself was verified through ClickHouse `scan_runs` rows with `host='akash'`.
+- **Patch verification is static:** the patched file must parse and Semgrep must stop reporting the finding. The repo's tests are not run, because KaryaShield never executes repo code. A verified patch is a suggestion for human review, never applied automatically.
 - **Demo target:** the target repo is this repo, and its seeded flaws (`demo/target_seed/`) are intentionally vulnerable fixtures that are never executed.
 - Not production-ready: no autonomous patching, no PRs, no multi-tenant support.
 
@@ -123,7 +127,7 @@ Tests: `.venv/bin/python -m pytest -q` → **51 passed**. They cover path traver
 
 - Ground the triage in verified remediation guidance (Senso.ai), with citations in the issue.
 - Serve the LLM on an Akash GPU lease, so Akash covers inference as well as hosting.
-- Draft remediation PRs, with human approval only.
+- Open draft PRs from verified patches, with human approval only.
 - More rules, and more repos per worker.
 
 ## Built during the hackathon

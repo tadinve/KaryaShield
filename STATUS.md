@@ -1,12 +1,12 @@
 # KaryaShield Status
-- Updated at: 2026-10-09 13:55 PDT
-- Milestone completed: M0–M7. Worker LIVE on Akash (dseq 1791578920187), writes enabled; ClickHouse scan_runs host='akash' row proves it ran and deduped issue #1.
+- Updated at: 2026-10-09 14:49 PDT
+- Milestone completed: M0–M7 + sandbox-verified remediation (mender). Worker LIVE on Akash dseq 1791582426373 (image eef7d17).
 - Last actual command: `python deploy/akash_deploy.py deploy deploy/akash.sdl.local.yaml --hours 8`
 - Result: PASS. 9 bids, lease active, service ready=1; Akash worker run 61b129c48df6: duplicate, 0 new issues. Evidence: demo/evidence/m7_akash.md. Open issue: provider ingress returns nginx 404 for /status.
 - Real integrations verified live: Semgrep ✅ · ClickHouse ✅ · Akash Network ✅ (worker running; scan_runs host='akash') · GitHub issue ✅ · LLM Gemini 3.6 Flash ✅ (non-sponsor)
 - GitHub issue URL: https://github.com/tadinve/KaryaShield/issues/1
-- Remaining blocker: /status ingress 404 on provider (cosmetic). Local runs must stay dry-run while the Akash worker is live.
-- Next single action: confirm the Akash worker reacts to a new commit (this push), then README + rehearsal
+- Remaining blocker: none. Local runs must stay dry-run while the Akash worker is live.
+- Next single action: rehearse (dry), record fallback video; live demo pushes flaw #2
 - Submission state: NOT SUBMITTED
 
 ## Log
@@ -35,3 +35,4 @@
 - 13:48 Image pushed (public). Deploy script TLS (certifi) + User-Agent fixes (Cloudflare 1010 blocked urllib default UA). Akash deployment dseq 1791578920187 active; 20:49:25Z scan_runs host='akash' (duplicate, 0 issues).
 - 13:55 Akash worker autonomously processed new commit 3517894 ~25s after push (scan_runs host=akash, duplicate, 0 issues).
 - 14:41 CodeMender-style remediation added (karyashield/mender.py): LLM proposes whole-file fix; sandbox verifies statically (ast.parse, Semgrep re-scan finding 1→0, no new findings, ≤40 changed lines). Real run on flaw #1: VERIFIED (8.8s). 58 tests pass. Verified patches go into new issues as a suggested diff (never applied).
+- 14:48 Redeploy (builder OK): closed 1791578920187, deployed eef7d17 → dseq 1791582426373; /status reachable at http://jp4ikhmqk9alt94bi0g5c68d80.ingress.h6i-dedicated.eu-se-1.digitalfrontier.so/status; first cycle deduped issue #1. Flaw #2 mender rehearsal (local temp copy): VERIFIED (eval→ast.literal_eval).
