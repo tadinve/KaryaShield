@@ -1,9 +1,9 @@
 # KaryaShield Status
-- Updated at: 2026-10-09 11:44 PDT
+- Updated at: 2026-10-09 12:36 PDT
 - Milestone completed: M1 PASS (live fetch + real Semgrep). M0 partial: AkashML, ClickHouse and the issue label aren't verified yet.
 - Last actual command: live `fetch_checkout` + `scan` against tadinve/KaryaShield@be44ef5
 - Result: PASS, 1 real finding (subprocess-shell-true, demo/target_seed/app/ping_tool.py:8), checkout SHA == live SHA. Evidence: demo/evidence/m1_scan.md
-- Real sponsor integrations working: Semgrep (REAL, live repo) / Akash (AkashML) NOT YET VERIFIED / ClickHouse NOT YET VERIFIED
+- Real sponsor integrations working: Semgrep (REAL, live repo) / Akash Network (worker hosting) NOT YET DEPLOYED / LLM provider NOT YET CHOSEN / ClickHouse NOT YET VERIFIED
 - GitHub issue URL: NOT YET
 - Remaining blocker: (1) `.env` with AKASHML_API_KEY + CLICKHOUSE_HOST/PASSWORD; (2) `karyashield` label on tadinve/KaryaShield; (3) `init-db` for ClickHouse schema
 - Next single action: builder fills `.env`, creates label, runs init-db; then run `doctor`
@@ -20,3 +20,5 @@
 - ~11:35 Rewrote triage → AkashML (OpenAI-compatible, base URL verified: /v1/models returns 401 without key), ledger → ClickHouse (ReplacingMergeTree + events + scan_runs), added init-db + single-writer lock. pytest: 50 passed.
 - ~11:38 Commits 35df93e (spec) + a452729 (M0 skeleton) pushed to origin/main.
 - 11:44 M1 PASS: live GitHub fetch (SHA verified) + real Semgrep scan → 1 finding. Evidence demo/evidence/m1_scan.md. Still blocked on .env keys (all 3 empty at 11:43).
+- 12:20 ClickHouse creds received but host is *.pg.clickhouse.cloud (managed Postgres; only :5432 open, :8443/:9440 closed). ClickHouse NOT verified.
+- 12:35 Spec rev 5: Akash Network hosts the worker (Docker + SDL); triage via configurable OpenAI-compatible LLM (non-sponsor); milestones M6 container, M7 Akash.
