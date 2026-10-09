@@ -1,12 +1,12 @@
 # KaryaShield Status
-- Updated at: 2026-10-09 13:33 PDT
-- Milestone completed: M0–M5 PASS (local, real services; MVP accepted). M6 PASS locally (container dry-run); image push pending builder OK.
-- Last actual command: `docker run … karyashield:local` (worker, dry-run) + in-container triage via entrypoint
-- Result: PASS. Container: fetch → scan → ClickHouse ledger → DUPLICATE issue #1; /healthz ok; /status JSON; Gemini triage in-container ok. Evidence: demo/evidence/m6_container.md
-- Real integrations verified live: Semgrep ✅ · ClickHouse ✅ (inserts + reads) · GitHub issue ✅ · LLM: Gemini API gemini-3.8-flash ✅ (also Vertex 2.5 Flash ✅; non-sponsor) · Akash Console API key ✅ (read-only calls) · Akash deployment ❌ not yet
+- Updated at: 2026-10-09 13:55 PDT
+- Milestone completed: M0–M7. Worker LIVE on Akash (dseq 1791578920187), writes enabled; ClickHouse scan_runs host='akash' row proves it ran and deduped issue #1.
+- Last actual command: `python deploy/akash_deploy.py deploy deploy/akash.sdl.local.yaml --hours 8`
+- Result: PASS. 9 bids, lease active, service ready=1; Akash worker run 61b129c48df6: duplicate, 0 new issues. Evidence: demo/evidence/m7_akash.md. Open issue: provider ingress returns nginx 404 for /status.
+- Real integrations verified live: Semgrep ✅ · ClickHouse ✅ · Akash Network ✅ (worker running; scan_runs host='akash') · GitHub issue ✅ · LLM Gemini 3.6 Flash ✅ (non-sponsor)
 - GitHub issue URL: https://github.com/tadinve/KaryaShield/issues/1
-- Remaining blocker: builder OK for init-db migration + image push (needs `gh auth refresh -s write:packages`), fine-grained GH token for worker, then deploy approval.
-- Next single action: builder approves image push + provides Akash credits/PAT → M7 deploy
+- Remaining blocker: /status ingress 404 on provider (cosmetic). Local runs must stay dry-run while the Akash worker is live.
+- Next single action: confirm the Akash worker reacts to a new commit (this push), then README + rehearsal
 - Submission state: NOT SUBMITTED
 
 ## Log
@@ -32,3 +32,4 @@
 - 13:32 ClickHouse idle wake-up caused a 30s read timeout; worker now pings ClickHouse on quiet cycles; read timeout 90s. doctor ALL PASS.
 - 13:38 Switched to gemini-3.6-flash (builder: 3.8 intermittently 429s). Real triage 2/2 ok (13.8s, 11.8s).
 - 13:40 init-db migration (builder OK): scan_runs.host added; existing 2 rows backfilled as 'local'.
+- 13:48 Image pushed (public). Deploy script TLS (certifi) + User-Agent fixes (Cloudflare 1010 blocked urllib default UA). Akash deployment dseq 1791578920187 active; 20:49:25Z scan_runs host='akash' (duplicate, 0 issues).

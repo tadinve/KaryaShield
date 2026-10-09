@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import ssl
 import sys
 import time
 import urllib.error
@@ -19,6 +20,11 @@ import urllib.request
 from pathlib import Path
 
 API = "https://console-api.akash.network"
+try:  # python.org macOS builds ship no root CAs
+    import certifi
+    _SSL = ssl.create_default_context(cafile=certifi.where())
+except ImportError:
+    _SSL = ssl.create_default_context()
 
 
 def _key() -> str:
@@ -37,9 +43,10 @@ def call(method: str, path: str, body: dict | None = None) -> dict:
     req = urllib.request.Request(API + path, method=method,
                                  data=json.dumps(body).encode() if body is not None else None,
                                  headers={"x-api-key": _key(), "Content-Type": "application/json",
-                                          "Accept": "application/json"})
+                                          "Accept": "application/json",
+                                          "User-Agent": "karyashield-deploy/1.0 (+https://github.com/tadinve/KaryaShield)"})
     try:
-        with urllib.request.urlopen(req, timeout=60) as r:
+        with urllib.request.urlopen(req, timeout=60, context=_SSL) as r:
             raw = r.read()
             return json.loads(raw) if raw else {}
     except urllib.error.HTTPError as e:
