@@ -1,5 +1,5 @@
 # KaryaShield Status
-- Updated at: 2026-10-09 13:05 PDT
+- Updated at: 2026-10-09 13:01 PDT
 - Milestone completed: M0 PASS (doctor ALL PASS), M1 PASS, M2 PASS, real e2e dry run PASS (13:00). M3 partial: ClickHouse reads verified, inserts pending first write run.
 - Last actual command: `python -m karyashield.cli run --once --dry-run`
 - Result: PASS. 1 finding → WOULD_CREATE, 0 errors, 12.9s; ClickHouse incidents/events/scan_runs = 0 rows (no writes). Evidence: demo/evidence/m3_dryrun.md
@@ -24,4 +24,4 @@
 - 12:35 Spec rev 5: Akash Network hosts the worker (Docker + SDL); triage via configurable OpenAI-compatible LLM (non-sponsor); milestones M6 container, M7 Akash.
 - 12:38 M2 PASS: real Gemini 2.5 Flash (Vertex AI, project qwiklabs-gcp-02-…) triage of the real finding; evidence demo/evidence/m2_triage.md. LLM_PROVIDER=vertex|openai_compat added.
 - ~13:00 Real ClickHouse service (GCP us-central1) reachable; fixed TLS CERTIFICATE_VERIFY_FAILED (python.org macOS build lacks root CAs) by passing certifi CA bundle. doctor: ClickHouse ping PASS, LLM PASS; schema + label pending builder authorization.
-- ~13:03 Label `karyashield` created + init-db (builder OK). doctor: ALL PASS. Real e2e dry run: WOULD_CREATE, ClickHouse 0 rows. Fixed truncated code fence in issue body; issue heading names the model.
+- ~13:00 Label `karyashield` created + init-db (builder OK). doctor: ALL PASS. Real e2e dry run: WOULD_CREATE, ClickHouse 0 rows. Fixed truncated code fence in issue body; issue heading names the model.
