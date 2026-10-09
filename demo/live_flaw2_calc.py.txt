@@ -1,0 +1,7 @@
+# INTENTIONALLY VULNERABLE TEST FIXTURE - never execute or deploy.
+# Seeded for the KaryaShield static-analysis demo (flaw #2, pushed live).
+
+
+def calculate(expression):
+    # BAD: evaluates user-supplied text as Python code.
+    return eval(expression)

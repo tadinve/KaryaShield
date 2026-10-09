@@ -1,0 +1,28 @@
+# KaryaShield pinned demo ruleset. Tracked in-repo so rehearsal and live demo
+# use identical rules. Coverage is limited to exactly these patterns.
+rules:
+  - id: karyashield.python.subprocess-shell-true
+    languages: [python]
+    severity: ERROR
+    message: >-
+      subprocess call with shell=True. If any part of the command comes from
+      external input, this allows OS command injection.
+    patterns:
+      - pattern-either:
+          - pattern: subprocess.$FUNC(..., shell=True, ...)
+      - metavariable-regex:
+          metavariable: $FUNC
+          regex: ^(run|call|check_call|check_output|Popen)$
+    metadata:
+      cwe: "CWE-78: OS Command Injection"
+  - id: karyashield.python.eval-non-literal
+    languages: [python]
+    severity: ERROR
+    message: >-
+      eval() on a non-literal argument. If the argument derives from external
+      input, this allows arbitrary code execution.
+    patterns:
+      - pattern: eval($X)
+      - pattern-not: eval("...")
+    metadata:
+      cwe: "CWE-95: Eval Injection"
