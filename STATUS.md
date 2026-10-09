@@ -1,5 +1,5 @@
 # KaryaShield Status
-- Updated at: 2026-10-09 13:13 PDT
+- Updated at: 2026-10-09 13:10 PDT
 - Milestone completed: M0–M5 PASS (local, real services; MVP accepted). M6 PASS locally (container dry-run); image push pending builder OK.
 - Last actual command: `docker run … karyashield:local` (worker, dry-run) + in-container triage via entrypoint
 - Result: PASS. Container: fetch → scan → ClickHouse ledger → DUPLICATE issue #1; /healthz ok; /status JSON; Gemini triage in-container ok. Evidence: demo/evidence/m6_container.md
@@ -26,4 +26,4 @@
 - ~13:00 Real ClickHouse service (GCP us-central1) reachable; fixed TLS CERTIFICATE_VERIFY_FAILED (python.org macOS build lacks root CAs) by passing certifi CA bundle. doctor: ClickHouse ping PASS, LLM PASS; schema + label pending builder authorization.
 - ~13:00 Label `karyashield` created + init-db (builder OK). doctor: ALL PASS. Real e2e dry run: WOULD_CREATE, ClickHouse 0 rows. Fixed truncated code fence in issue body; issue heading names the model.
 - 13:05 M4 PASS: real issue https://github.com/tadinve/KaryaShield/issues/1 created; ClickHouse record links it. M5 PASS: rerun → duplicate, 0 issues. Write gate set back to false.
-- 13:12 M6 PASS (local): linux/amd64 image; worker dry-run in Docker saw issue #1 as duplicate via ClickHouse; /status works; in-container Vertex triage ok.
+- 13:10 M6 PASS (local): linux/amd64 image; worker dry-run in Docker saw issue #1 as duplicate via ClickHouse; /status works; in-container Vertex triage ok.

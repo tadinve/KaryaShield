@@ -1,6 +1,6 @@
 # M6 evidence: worker container (linux/amd64) verified locally, dry-run
 
-- When: 2026-10-09 13:08–13:12 PDT. Image built with `docker buildx build --platform linux/amd64` (665 MB, arch amd64).
+- When: 2026-10-09 13:08–13:10 PDT. Image built with `docker buildx build --platform linux/amd64` (665 MB, arch amd64).
 - Run: `docker run --env-file .env -e KARYASHIELD_ENABLE_WRITES=false -e KARYASHIELD_HOST=local-docker -e GH_TOKEN=… -e GOOGLE_APPLICATION_CREDENTIALS_JSON=… karyashield:local` (worker entrypoint, non-root uid 10001)
 
 ```
