@@ -1,12 +1,12 @@
 # KaryaShield Status
-- Updated at: 2026-10-09 13:01 PDT
-- Milestone completed: M0 PASS (doctor ALL PASS), M1 PASS, M2 PASS, real e2e dry run PASS (13:00). M3 partial: ClickHouse reads verified, inserts pending first write run.
-- Last actual command: `python -m karyashield.cli run --once --dry-run`
-- Result: PASS. 1 finding → WOULD_CREATE, 0 errors, 12.9s; ClickHouse incidents/events/scan_runs = 0 rows (no writes). Evidence: demo/evidence/m3_dryrun.md
-- Real integrations verified live: Semgrep ✅ · LLM (Gemini/Vertex, non-sponsor) ✅ · ClickHouse ✅ connect+schema+reads (inserts pending) · Akash Network ❌ (not deployed)
-- GitHub issue URL: NOT YET
-- Remaining blocker: builder OK to set KARYASHIELD_ENABLE_WRITES=true for the first real issue (M4). Then Akash credits for M7. Risk: Qwiklabs GCP project may expire.
-- Next single action: builder approves write run → `run --once` (issue #1), then rerun for duplicate proof (M5)
+- Updated at: 2026-10-09 13:07 PDT
+- Milestone completed: M0–M5 PASS (local, real services). MVP accepted: acceptance tests #9 and #10 pass live. Next: M6 container, M7 Akash.
+- Last actual command: `run --once` ×2 with KARYASHIELD_ENABLE_WRITES=true (then set back to false)
+- Result: PASS. Run 1: issues_created=1 (20.8s). Run 2: duplicates_skipped=1, issues_created=0 (4.3s). ClickHouse incident = issue_created + URL; 3 events; 2 scan_runs rows. Evidence: demo/evidence/m4_m5_issue_and_dedup.md
+- Real integrations verified live: Semgrep ✅ · ClickHouse ✅ (inserts + reads) · GitHub issue ✅ · LLM (Gemini/Vertex, non-sponsor) ✅ · Akash Network ❌ (not deployed)
+- GitHub issue URL: https://github.com/tadinve/KaryaShield/issues/1
+- Remaining blocker: Akash credits (Console requires credits); Vertex auth for the container (service-account key may be blocked on Qwiklabs).
+- Next single action: implement worker mode + status endpoint + Dockerfile + SDL (M6)
 - Submission state: NOT SUBMITTED
 
 ## Log
@@ -25,3 +25,4 @@
 - 12:38 M2 PASS: real Gemini 2.5 Flash (Vertex AI, project qwiklabs-gcp-02-…) triage of the real finding; evidence demo/evidence/m2_triage.md. LLM_PROVIDER=vertex|openai_compat added.
 - ~13:00 Real ClickHouse service (GCP us-central1) reachable; fixed TLS CERTIFICATE_VERIFY_FAILED (python.org macOS build lacks root CAs) by passing certifi CA bundle. doctor: ClickHouse ping PASS, LLM PASS; schema + label pending builder authorization.
 - ~13:00 Label `karyashield` created + init-db (builder OK). doctor: ALL PASS. Real e2e dry run: WOULD_CREATE, ClickHouse 0 rows. Fixed truncated code fence in issue body; issue heading names the model.
+- 13:05 M4 PASS: real issue https://github.com/tadinve/KaryaShield/issues/1 created; ClickHouse record links it. M5 PASS: rerun → duplicate, 0 issues. Write gate set back to false.

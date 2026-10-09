@@ -365,12 +365,12 @@ Each run prints `run_id, mode, host, repo, sha, findings, actionable, issues_cre
 
 | Deadline (PDT) | Milestone | Proof required | Status |
 |---|---|---|---|
-| ASAP | M0 environment | `doctor` all PASS (ClickHouse, LLM, label) | partial; LLM key + real ClickHouse service pending |
+| ASAP | M0 environment | `doctor` all PASS (ClickHouse, LLM, label) | **PASS ~13:00** |
 | 1:30 PM | M1 scanner | Real Semgrep finding from live checkout | **PASS 11:44** ([evidence](demo/evidence/m1_scan.md)) |
 | 1:30 PM | M2 triage | Real LLM response parses as Triage for the real finding | **PASS 12:38** ([evidence](demo/evidence/m2_triage.md)) |
-| 2:15 PM | M3 ledger | Real ClickHouse inserts and reads; reconciliation verified | pending ClickHouse service |
-| 2:30 PM | M4 web action (local) | Real GitHub issue; ClickHouse links to it | |
-| 2:30 PM | M5 repeatability (local) | Rerun: duplicate, zero new issues | |
+| 2:15 PM | M3 ledger | Real ClickHouse inserts and reads; reconciliation verified | **PASS 13:05** |
+| 2:30 PM | M4 web action (local) | Real GitHub issue; ClickHouse links to it | **PASS 13:05** ([issue #1](https://github.com/tadinve/KaryaShield/issues/1)) |
+| 2:30 PM | M5 repeatability (local) | Rerun: duplicate, zero new issues | **PASS 13:05** ([evidence](demo/evidence/m4_m5_issue_and_dedup.md)) |
 | 2:50 PM | M6 container | linux/amd64 image runs locally in dry-run; `/status` works; image pushed (authorized) | |
 | 3:15 PM | M7 Akash | Lease active; Akash logs show cycles; `scan_runs.host='akash'` | |
 | 3:30 PM | Feature freeze | Rehearsal with live push; fallback screenshots and recording; README | |
